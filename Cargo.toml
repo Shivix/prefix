@@ -1,0 +1,17 @@
+[package]
+name = "prefix"
+version = "0.1.0"
+authors = ["Shivix"]
+edition = "2018"
+description = "A pretty printer for FIX messages"
+license = "GPL-3.0-only"
+exclude = [
+    ".gitignore",
+    "LICENSE",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.5.4"
+
