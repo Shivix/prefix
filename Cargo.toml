@@ -1,13 +1,27 @@
 [package]
 name = "prefix"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["Shivix"]
 edition = "2018"
 description = "A pretty printer for FIX messages"
+repository = "https://github.com/Shivix/prefix"
 license = "GPL-3.0-only"
 exclude = [
     ".gitignore",
     "LICENSE",
+]
+keywords = [
+    "fix",
+    "parser",
+    "pretty",
+    "print",
+    "cli",
+]
+categories = [
+    "command-line-utilities",
+    "text-processing",
+    "visualization",
+    "development-tools",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

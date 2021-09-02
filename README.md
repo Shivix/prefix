@@ -25,4 +25,5 @@ Can be installed using:
 ```
 cargo install prefix
 ```
-
+## Issues
+Any bugs/ requests can be added to the [issues](https://github.com/Shivix/prefix/issues) page on the github repository.
