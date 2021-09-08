@@ -43,10 +43,9 @@ pub fn run(input: String) -> Result<(), &'static str> {
     Ok(())
 }
 
-// FIXME: currently will not parse \001 delimiter
 fn parse(input: String) -> Result<Vec<Value>, &'static str>{
     // matches against a number followed by an = followed by anything excluding the given delimiters
-    let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|]+)").expect("Bad regex");
+    let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|]+)").expect("Bad regex");
     let mut result = Vec::<Value>::new();
 
     if !regex.is_match(&input) {

@@ -16,9 +16,7 @@ BeginString = 4.4
 Account = test
 ```
 
-Currently can use ^ and | as delimiters. SOH will not currently work.
-
-cat -v can be used to convert SOH into ^A which will be parsed fine.
+Currently can use ^ and | and SOH as delimiters
 
 ## Installation
 Can be installed using:
