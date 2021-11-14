@@ -1,6 +1,6 @@
 [package]
 name = "prefix"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Shivix"]
 edition = "2018"
 description = "A pretty printer for FIX messages"
@@ -28,4 +28,5 @@ categories = [
 
 [dependencies]
 regex = "1.5.4"
+getopts = "0.2.21"
 

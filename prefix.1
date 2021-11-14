@@ -1,0 +1,23 @@
+.TH PREFIX "1" "November 2021" "prefix 0.1.4" "User Commands"
+.SH NAME
+prefix \- pretty print FIX messages
+.SH SYNOPSIS
+.B prefix
+[\fI\,OPTION\/\fR]
+.SH DESCRIPTION
+A commandline based pretty printer for FIX messages.
+pipe other commands into or out of prefix to use.
+.PP
+.TP
+\fB\-d, --delimiter\fR=\fI\,STRING\/\fR
+set delimiter string to print after each FIX fields; if not provided a newline is used
+.TP
+\fB\-v, --value
+translate certain values as well as tags; Such as 1 -> Buy for Side
+.TP
+\fB\-h, --help
+display this help menu
+.SH "BUGS"
+Found a bug? Please report it at https://github.com/Shivix/prefix/issues.
+.SH SEE ALSO
+Full documentation <https://crates.io/crates/prefix>

@@ -957,4 +957,3 @@ pub const TAGS: [&str; 957] = [
     "LegContractSettlMonth",
     "LegInterestAccrualDate",
 ];
-

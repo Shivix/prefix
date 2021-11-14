@@ -18,6 +18,10 @@ Account = test
 
 Currently can use ^ and | and SOH as delimiters
 
+Use `prefix --help` to see possible arguments to pass it.
+
+Comes with a manpage but cargo will currently not install it automatically
+
 ## Installation
 Can be installed using:
 ```
