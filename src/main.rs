@@ -58,8 +58,7 @@ fn main() {
         .read_to_string(&mut input)
         .expect("Could not read input");
 
-    match prefix::run(input, value_flag, delimiter) {
-        Err(x) => eprintln!("{}", x),
-        _ => {}
-    };
+    if let Err(x) = prefix::run(input, value_flag, delimiter) {
+        eprintln!("{}", x)
+    }
 }
