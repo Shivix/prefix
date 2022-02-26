@@ -93,11 +93,11 @@ fn parse(input: String) -> Result<Vec<Field>, &'static str> {
     let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").expect("Bad regex");
     let mut result = Vec::<Field>::new();
 
-    if !regex.is_match(&input) {
+    if !regex.is_match(input) {
         return Err("Could not find a valid FIX message");
     }
 
-    for i in regex.captures_iter(&input) {
+    for i in regex.captures_iter(input) {
         result.push(Field {
             tag: FromStr::from_str(&i["tag"]).expect("Could not parse tag"),
             value: i["value"].to_string(),
@@ -139,29 +139,50 @@ fn print(input: String) {
 // Can refactor and add a translated values field to the TAGS map in the future
 #[rustfmt::skip]
 fn translate_value(field: Field) -> String {
-    if field.tag == 54 { // Side
-        if field.value == "1" { return String::from("Buy"); }
-        if field.value == "2" { return String::from("Sell"); }
-    } else if field.tag == 269 { // MDEntryType
-        if field.value == "0" { return String::from("Bid"); }
-        if field.value == "1" { return String::from("Offer"); }
-        if field.value == "2" { return String::from("Trade"); }
-    } else if field.tag == 59 { // TimeInForce
-        if field.value == "0" { return String::from("Day"); }
-        if field.value == "1" { return String::from("GTC"); }
-        if field.value == "2" { return String::from("OPG"); }
-        if field.value == "3" { return String::from("IOC"); }
-        if field.value == "4" { return String::from("FOK"); }
-        if field.value == "5" { return String::from("GTX"); }
-        if field.value == "6" { return String::from("GTC"); }
-    } else if field.tag == 279 { // MDEntryType
-        if field.value == "0" { return String::from("New"); }
-        if field.value == "1" { return String::from("Change"); }
-        if field.value == "2" { return String::from("Delete"); }
-    } else if field.tag == 263 { // MDEntryType
-        if field.value == "0" { return String::from("Snapshot"); }
-        if field.value == "1" { return String::from("Subscribe"); }
-        if field.value == "2" { return String::from("Unsubscribe"); }
+    match field.tag {
+        54 => { // Side
+            match field.value.as_str() {
+                "1" => String::from("Buy"),
+                "2" => String::from("Sell"),
+                _ => field.value
+            }
+        }
+        59 => { // TimeInForce
+            match field.value.as_str() {
+                "0" => String::from("Day"),
+                "1" => String::from("GTC"),
+                "2" => String::from("OPG"),
+                "3" => String::from("IOC"),
+                "4" => String::from("FOK"),
+                "5" => String::from("GTX"),
+                "6" => String::from("GTD"),
+                _ => field.value
+            }
+        }
+        263 => { // SubscriptionRequestType
+            match field.value.as_str() {
+                "0" => String::from("Snapshot"),
+                "1" => String::from("Subscribe"),
+                "2" => String::from("Unsubscribe"),
+                _ => field.value
+            }
+        }
+        269 => { // MDEntryType
+            match field.value.as_str() {
+                "0" => String::from("Bid"),
+                "1" => String::from("Offer"),
+                "2" => String::from("Trade"),
+                _ => field.value
+            }
+        }
+        279 => { // MDUpdateAction
+            match field.value.as_str() {
+                "0" => String::from("New"),
+                "1" => String::from("Change"),
+                "2" => String::from("Delete"),
+                _ => field.value
+            }
+        }
+        _ => field.value
     }
-    field.value
 }
