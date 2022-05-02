@@ -90,7 +90,7 @@ pub fn run(input: String, value_flag: bool, delimiter: String) -> Result<(), &'s
 fn parse(input: String) -> Result<Vec<Field>, &'static str> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
-    let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").expect("Bad regex");
+    let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").expect("bad regex");
     let mut result = Vec::<Field>::new();
 
     if !regex.is_match(input) {
@@ -99,7 +99,7 @@ fn parse(input: String) -> Result<Vec<Field>, &'static str> {
 
     for i in regex.captures_iter(input) {
         result.push(Field {
-            tag: FromStr::from_str(&i["tag"]).expect("Could not parse tag"),
+            tag: FromStr::from_str(&i["tag"]).expect("could not parse tag"),
             value: i["value"].to_string(),
         })
     }
@@ -110,7 +110,7 @@ fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: String) -> S
     let mut result = String::new();
 
     for i in input {
-        // incase any non standard tags are used
+        // allow custom tags to still be printed without translation
         if i.tag as usize >= tags::TAGS.len() {
             result.push_str(&i.tag.to_string());
         } else {
@@ -132,57 +132,50 @@ fn print(input: String) {
     let mut handle = stdout.lock();
     handle
         .write_all(input.as_bytes())
-        .expect("Could not print to stdout");
+        .expect("could not print to stdout");
 }
 
-// not ideal but leaves it simple and easy for anyone to add values. This function is opt in.
-// Can refactor and add a translated values field to the TAGS map in the future
-#[rustfmt::skip]
+// Not ideal but leaves it simple and easy for anyone to add values. This function is opt in.
 fn translate_value(field: Field) -> String {
     match field.tag {
-        54 => { // Side
-            match field.value.as_str() {
-                "1" => String::from("Buy"),
-                "2" => String::from("Sell"),
-                _ => field.value
-            }
-        }
-        59 => { // TimeInForce
-            match field.value.as_str() {
-                "0" => String::from("Day"),
-                "1" => String::from("GTC"),
-                "2" => String::from("OPG"),
-                "3" => String::from("IOC"),
-                "4" => String::from("FOK"),
-                "5" => String::from("GTX"),
-                "6" => String::from("GTD"),
-                _ => field.value
-            }
-        }
-        263 => { // SubscriptionRequestType
-            match field.value.as_str() {
-                "0" => String::from("Snapshot"),
-                "1" => String::from("Subscribe"),
-                "2" => String::from("Unsubscribe"),
-                _ => field.value
-            }
-        }
-        269 => { // MDEntryType
-            match field.value.as_str() {
-                "0" => String::from("Bid"),
-                "1" => String::from("Offer"),
-                "2" => String::from("Trade"),
-                _ => field.value
-            }
-        }
-        279 => { // MDUpdateAction
-            match field.value.as_str() {
-                "0" => String::from("New"),
-                "1" => String::from("Change"),
-                "2" => String::from("Delete"),
-                _ => field.value
-            }
-        }
-        _ => field.value
+        // Side
+        54 => match field.value.as_str() {
+            "1" => String::from("Buy"),
+            "2" => String::from("Sell"),
+            _ => field.value,
+        },
+        // TimeInForce
+        59 => match field.value.as_str() {
+            "0" => String::from("Day"),
+            "1" => String::from("GTC"),
+            "2" => String::from("OPG"),
+            "3" => String::from("IOC"),
+            "4" => String::from("FOK"),
+            "5" => String::from("GTX"),
+            "6" => String::from("GTD"),
+            _ => field.value,
+        },
+        // SubscriptionRequestType
+        263 => match field.value.as_str() {
+            "0" => String::from("Snapshot"),
+            "1" => String::from("Subscribe"),
+            "2" => String::from("Unsubscribe"),
+            _ => field.value,
+        },
+        // MDEntryType
+        269 => match field.value.as_str() {
+            "0" => String::from("Bid"),
+            "1" => String::from("Offer"),
+            "2" => String::from("Trade"),
+            _ => field.value,
+        },
+        // MDUpdateAction
+        279 => match field.value.as_str() {
+            "0" => String::from("New"),
+            "1" => String::from("Change"),
+            "2" => String::from("Delete"),
+            _ => field.value,
+        },
+        _ => field.value,
     }
 }

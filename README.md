@@ -1,13 +1,14 @@
 # PREtty FIX
-
 A commandline based pretty printer for FIX messages.
 
 ## Usage
-pipe other commands into or out of prefix to use.
-
-example:
-```
+Mainly developed with unix piping in mind:
+```bash
 echo 8=4.4^1=test | prefix
+```
+But can also provide a message as an argument:
+```bash
+prefix 8=4.4^1=test
 ```
 
 outputs:
