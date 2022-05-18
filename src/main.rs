@@ -5,7 +5,7 @@ use std::io::{self, Read};
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// FIX message to be parsed. If not provided will look for a message piped through stdin.
+    /// FIX message to be parsed. If not provided, will look for a message piped through stdin.
     message: Option<String>,
     /// Set delimiter string to print after each FIX field.
     #[clap(short, long, default_value = "\n")]
@@ -26,7 +26,7 @@ fn main() {
             let mut input = String::new();
             io::stdin()
                 .read_to_string(&mut input)
-                .expect("could not read input");
+                .expect("cannot read input");
             input
         }
     };
