@@ -1,0 +1,35 @@
+.TH "PREFIX" "1" "2022-05-18" "" "PREFIX"
+.SH NAME
+\fBPREtty FIX\fR
+.SH DESCRIPTION
+A customizable pretty printer for FIX messages.
+.nf
+Made with UNIX piping in mind.
+.nf
+Based on a FIX4.4 dictionary, but is usable with most versions.
+.SH USAGE
+prefix \fB[OPTIONS]\fR \fB[MESSAGE]\fR
+.nf
+.SH ARGS
+.TP
+\fB<MESSAGE>\fR
+FIX message to be parsed. If not provided will look for a message piped through stdin.
+.SH OPTIONS
+.TP
+.B -d, --delimiter <DELIMITER>
+Set delimiter string to print after each FIX field [default: "\n"]
+.TP
+.B -h, --help
+Print help information.
+.TP
+.B -v, --value
+Translate common FIX values (for Side: 1 -> Buy)
+.TP
+.B -V, --version
+Print version information.
+.SH BUGS
+For any issues or feature requests:
+.sp
+https://github.com/Shivix/prefix/issues
+.SH AUTHOR
+Shivix

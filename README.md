@@ -1,6 +1,8 @@
 # PREtty FIX
 A commandline based pretty printer for FIX messages.
 
+Based on a FIX4.4 dictionary, but is usable with most versions.
+
 ## Usage
 Mainly developed with unix piping in mind:
 ```bash
@@ -17,11 +19,9 @@ BeginString = 4.4
 Account = test
 ```
 
-Currently can use ^ and | and SOH as delimiters
+Currently can use ^ and | and SOH as delimiters.
 
-Use `prefix --help` to see possible arguments to pass it.
-
-Comes with a manpage but cargo will currently not install it automatically
+Use `prefix --help` or `man prefix` for more details.
 
 ## Installation
 Can be installed using:
