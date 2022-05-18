@@ -94,12 +94,13 @@ fn parse(input: String) -> Result<Vec<Field>, &'static str> {
     let mut result = Vec::<Field>::new();
 
     if !regex.is_match(input) {
-        return Err("Could not find a valid FIX message");
+        // Do not panic on not finding a FIX message. Allows prefix to work well with fzf
+        return Err("cannot find a valid FIX message");
     }
 
     for i in regex.captures_iter(input) {
         result.push(Field {
-            tag: FromStr::from_str(&i["tag"]).expect("could not parse tag"),
+            tag: FromStr::from_str(&i["tag"]).expect("cannot parse tag"),
             value: i["value"].to_string(),
         })
     }
@@ -110,7 +111,7 @@ fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: String) -> S
     let mut result = String::new();
 
     for i in input {
-        // allow custom tags to still be printed without translation
+        // Allow custom tags to still be printed without translation
         if i.tag as usize >= tags::TAGS.len() {
             result.push_str(&i.tag.to_string());
         } else {
@@ -138,6 +139,16 @@ fn print(input: String) {
 // Not ideal but leaves it simple and easy for anyone to add values. This function is opt in.
 fn translate_value(field: Field) -> String {
     match field.tag {
+        // OrdType
+        40 => match field.value.as_str() {
+            "1" => String::from("Market"),
+            "2" => String::from("Limit"),
+            "3" => String::from("Stop"),
+            // Keep as one word for better usage with awk
+            "4" => String::from("StopLimit"),
+            "D" => String::from("PreviouslyQuoted"),
+            _ => field.value,
+        }
         // Side
         54 => match field.value.as_str() {
             "1" => String::from("Buy"),
@@ -155,6 +166,16 @@ fn translate_value(field: Field) -> String {
             "6" => String::from("GTD"),
             _ => field.value,
         },
+        // ExecType
+        150 => match field.value.as_str() {
+            "0" => String::from("New"),
+            "1" => String::from("PartialFill"),
+            "2" => String::from("Fill"),
+            "4" => String::from("Canceled"),
+            "8" => String::from("Rejected"),
+            "F" => String::from("Trade"),
+            _ => field.value,
+        }
         // SubscriptionRequestType
         263 => match field.value.as_str() {
             "0" => String::from("Snapshot"),
