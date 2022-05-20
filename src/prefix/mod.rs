@@ -148,7 +148,7 @@ fn translate_value(field: Field) -> String {
             "4" => String::from("StopLimit"),
             "D" => String::from("PreviouslyQuoted"),
             _ => field.value,
-        }
+        },
         // Side
         54 => match field.value.as_str() {
             "1" => String::from("Buy"),
@@ -175,7 +175,7 @@ fn translate_value(field: Field) -> String {
             "8" => String::from("Rejected"),
             "F" => String::from("Trade"),
             _ => field.value,
-        }
+        },
         // SubscriptionRequestType
         263 => match field.value.as_str() {
             "0" => String::from("Snapshot"),
