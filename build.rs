@@ -14,7 +14,10 @@ fn main() -> Result<(), Error> {
 
     for shell in [Bash, Fish, PowerShell, Zsh] {
         let completion_path = generate_to(shell, &mut cmd, "prefix", &out_dir)?;
-        println!("cargo:warning=completion file is generated: {:?}", completion_path);
+        println!(
+            "cargo:warning=completion file is generated: {:?}",
+            completion_path
+        );
     }
 
     let man = clap_mangen::Man::new(cmd);
