@@ -30,7 +30,8 @@ mod tests {
 
     #[test]
     fn parse_case() {
-        let input = "55=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^001=55:05:22";
+        let input =
+            "55=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^001=55:05:22";
         let result = parse(input).unwrap();
         let expected: Vec<Field> = vec![
             Field {
@@ -121,7 +122,7 @@ fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: &str) -> Str
         } else {
             result.push_str(&i.value);
         }
-        result.push_str(&delimiter);
+        result.push_str(delimiter);
     }
     result
 }
