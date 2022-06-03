@@ -1,0 +1,28 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH prefix 1  "prefix 1.0.1" 
+.SH NAME
+prefix \- A customizable pretty printer for FIX messages
+.SH SYNOPSIS
+\fBprefix\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-d\fR|\fB\-\-delimiter\fR] [\fB\-v\fR|\fB\-\-value\fR] [\fImessage\fR] 
+.SH DESCRIPTION
+A customizable pretty printer for FIX messages
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help information
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version information
+.TP
+\fB\-d\fR, \fB\-\-delimiter\fR [default: 
+]
+Set delimiter string to print after each FIX field
+.TP
+\fB\-v\fR, \fB\-\-value\fR
+Translate common FIX values (for Side: 1 \-> Buy)
+.TP
+[\fImessage\fR]
+FIX message to be parsed, if not provided will look for a message piped through stdin
+.SH VERSION
+v1.0.1

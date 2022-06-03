@@ -1,0 +1,36 @@
+#compdef prefix
+
+autoload -U is-at-least
+
+_prefix() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'-d+[Set delimiter string to print after each FIX field]: : ' \
+'--delimiter=[Set delimiter string to print after each FIX field]: : ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+'-V[Print version information]' \
+'--version[Print version information]' \
+'-v[Translate common FIX values (for Side: 1 -> Buy)]' \
+'--value[Translate common FIX values (for Side: 1 -> Buy)]' \
+'::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
+&& ret=0
+}
+
+(( $+functions[_prefix_commands] )) ||
+_prefix_commands() {
+    local commands; commands=()
+    _describe -t commands 'prefix commands' commands "$@"
+}
+
+_prefix "$@"
