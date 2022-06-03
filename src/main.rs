@@ -1,9 +1,9 @@
-mod prefix;
 mod command;
+mod prefix;
 use std::io::{self, Read};
 
 fn main() {
-    let matches = command::build_cli().get_matches();
+    let matches = command::make_command().get_matches();
 
     let fix_message = match matches.value_of("message") {
         Some(msg) => msg.to_string(),
