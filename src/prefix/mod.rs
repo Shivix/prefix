@@ -9,7 +9,7 @@ mod tests {
 
     #[test]
     fn basic_parse_case() {
-        let input = String::from("8=4.4^1=test^55=EUR/USD");
+        let input = "8=4.4^1=test^55=EUR/USD";
         let result = parse(input).unwrap();
         let expected: Vec<Field> = vec![
             Field {
@@ -30,9 +30,7 @@ mod tests {
 
     #[test]
     fn parse_case() {
-        let input = String::from(
-            "55=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^001=55:05:22",
-        );
+        let input = "55=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^001=55:05:22";
         let result = parse(input).unwrap();
         let expected: Vec<Field> = vec![
             Field {
@@ -65,9 +63,9 @@ mod tests {
 
     #[test]
     fn format_case() {
-        let input = String::from("8=FIX.4.4^1=test^55=ETH/USD^54=1");
+        let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1";
         let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "|".to_string());
+        let result = format_to_string(parsed, true, "|");
         let expected =
             String::from("BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|");
         assert_eq!(result, expected);
@@ -80,14 +78,14 @@ struct Field {
     value: String,
 }
 
-pub fn run(input: String, value_flag: bool, delimiter: String) -> Result<(), &'static str> {
+pub fn run(input: &str, value_flag: bool, delimiter: &str) -> Result<(), &'static str> {
     let parsed = parse(input)?;
     let to_print = format_to_string(parsed, value_flag, delimiter);
     print(to_print);
     Ok(())
 }
 
-fn parse(input: String) -> Result<Vec<Field>, &'static str> {
+fn parse(input: &str) -> Result<Vec<Field>, &'static str> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
     let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").expect("bad regex");
@@ -107,7 +105,7 @@ fn parse(input: String) -> Result<Vec<Field>, &'static str> {
     Ok(result)
 }
 
-fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: String) -> String {
+fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: &str) -> String {
     let mut result = String::new();
 
     for i in input {
