@@ -23,7 +23,7 @@ _prefix() {
 '--version[Print version information]' \
 '-v[Translate common FIX values (for Side: 1 -> Buy)]' \
 '--value[Translate common FIX values (for Side: 1 -> Buy)]' \
-'::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
+'*::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
 && ret=0
 }
 
