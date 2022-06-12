@@ -5,8 +5,9 @@ use std::io::{self, Read};
 fn main() {
     let matches = command::make_command().get_matches();
 
-    let fix_message = match matches.value_of("message") {
-        Some(msg) => msg.to_string(),
+    let fix_message = match matches.values_of("message") {
+        // If multiple messages are provided, simply combine them with |
+        Some(msg) => msg.map(|elem| elem.to_string() + "|").collect(),
         None => {
             // stdin is used to allow piping with other commands
             let mut input = String::new();
