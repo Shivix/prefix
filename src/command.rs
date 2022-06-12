@@ -4,7 +4,7 @@ pub fn make_command() -> Command<'static> {
     Command::new("prefix")
         .about("A customizable pretty printer for FIX messages")
         .version(env!("CARGO_PKG_VERSION"))
-        .arg(Arg::new("message").help(
+        .arg(Arg::new("message").multiple_occurrences(true).help(
             "FIX message to be parsed, if not provided will look for a message piped through stdin",
         ))
         .arg(
