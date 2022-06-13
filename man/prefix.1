@@ -1,10 +1,10 @@
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
-.TH prefix 1  "prefix 1.0.3" 
+.TH prefix 1  "prefix 1.0.4" 
 .SH NAME
 prefix \- A customizable pretty printer for FIX messages
 .SH SYNOPSIS
-\fBprefix\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-d\fR|\fB\-\-delimiter\fR] [\fB\-v\fR|\fB\-\-value\fR] [\fImessage\fR] 
+\fBprefix\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-d\fR|\fB\-\-delimiter\fR] [\fB\-v\fR|\fB\-\-value\fR] [\fB\-s\fR|\fB\-\-strip\fR] [\fImessage\fR] 
 .SH DESCRIPTION
 A customizable pretty printer for FIX messages
 .SH OPTIONS
@@ -17,12 +17,15 @@ Print version information
 .TP
 \fB\-d\fR, \fB\-\-delimiter\fR [default: 
 ]
-Set delimiter string to print after each FIX field
+Set delimiter string to print after each FIX field.
 .TP
 \fB\-v\fR, \fB\-\-value\fR
-Translate common FIX values (for Side: 1 \-> Buy)
+Translate the values of some tags. (for Side: 1 \-> Buy)
+.TP
+\fB\-s\fR, \fB\-\-strip\fR
+Strip the whitespace around the = in each field. Less human readable but closer to real FIX.
 .TP
 [\fImessage\fR]
 FIX message to be parsed, if not provided will look for a message piped through stdin
 .SH VERSION
-v1.0.3
+v1.0.4

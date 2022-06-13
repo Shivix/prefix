@@ -1,6 +1,6 @@
 [package]
 name = "prefix"
-version = "1.0.3"
+version = "1.0.4"
 authors = ["Shivix"]
 edition = "2021"
 description = "A customizable pretty printer for FIX messages"

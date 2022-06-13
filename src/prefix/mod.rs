@@ -66,7 +66,7 @@ mod tests {
     fn format_case() {
         let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
         let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "|");
+        let result = format_to_string(parsed, true, "|", false);
         let expected = String::from(
             "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
         );
@@ -78,9 +78,9 @@ mod tests {
         let input =
             "8=FIX.4.2|1=ACCOUNT|299=1234^55=USDJPY\n8=FIX.4.4|1=ACCOUNT2|299=4321|55=EURJPY|";
         let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "| ");
+        let result = format_to_string(parsed, true, "| ", true);
         let expected =
-            String::from("BeginString = FIX.4.2| Account = ACCOUNT| QuoteEntryID = 1234| Symbol = USDJPY| \nBeginString = FIX.4.4| Account = ACCOUNT2| QuoteEntryID = 4321| Symbol = EURJPY| ");
+            String::from("BeginString=FIX.4.2| Account=ACCOUNT| QuoteEntryID=1234| Symbol=USDJPY| \nBeginString=FIX.4.4| Account=ACCOUNT2| QuoteEntryID=4321| Symbol=EURJPY| ");
         assert_eq!(result, expected);
     }
 }
@@ -91,9 +91,14 @@ struct Field {
     value: String,
 }
 
-pub fn run(input: &str, value_flag: bool, delimiter: &str) -> Result<(), &'static str> {
+pub fn run(
+    input: &str,
+    value_flag: bool,
+    delimiter: &str,
+    strip: bool,
+) -> Result<(), &'static str> {
     let parsed = parse(input)?;
-    let to_print = format_to_string(parsed, value_flag, delimiter);
+    let to_print = format_to_string(parsed, value_flag, delimiter, strip);
     print(to_print);
     Ok(())
 }
@@ -119,7 +124,12 @@ fn parse(input: &str) -> Result<Vec<Field>, &'static str> {
     Ok(result)
 }
 
-fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: &str) -> String {
+fn format_to_string(
+    input: Vec<Field>,
+    value_flag: bool,
+    delimiter: &str,
+    strip_flag: bool,
+) -> String {
     let mut result = String::new();
     let mut msg_counter = 0;
     for i in input {
@@ -138,7 +148,11 @@ fn format_to_string(input: Vec<Field>, value_flag: bool, delimiter: &str) -> Str
         } else {
             result.push_str(tags::TAGS[i.tag]);
         }
-        result.push_str(" = ");
+        if strip_flag {
+            result.push('=');
+        } else {
+            result.push_str(" = ");
+        }
         result.push_str(match value_flag {
             true => translate_value(&i),
             false => &i.value,

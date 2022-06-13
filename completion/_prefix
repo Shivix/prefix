@@ -15,14 +15,16 @@ _prefix() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'-d+[Set delimiter string to print after each FIX field]: : ' \
-'--delimiter=[Set delimiter string to print after each FIX field]: : ' \
+'-d+[Set delimiter string to print after each FIX field.]: : ' \
+'--delimiter=[Set delimiter string to print after each FIX field.]: : ' \
 '-h[Print help information]' \
 '--help[Print help information]' \
 '-V[Print version information]' \
 '--version[Print version information]' \
-'-v[Translate common FIX values (for Side: 1 -> Buy)]' \
-'--value[Translate common FIX values (for Side: 1 -> Buy)]' \
+'-v[Translate the values of some tags. (for Side: 1 -> Buy)]' \
+'--value[Translate the values of some tags. (for Side: 1 -> Buy)]' \
+'-s[Strip the whitespace around the = in each field. Less human readable but closer to real FIX.]' \
+'--strip[Strip the whitespace around the = in each field. Less human readable but closer to real FIX.]' \
 '*::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
 && ret=0
 }

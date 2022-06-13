@@ -13,12 +13,18 @@ pub fn make_command() -> Command<'static> {
                 .short('d')
                 .takes_value(true)
                 .default_value("\n")
-                .help("Set delimiter string to print after each FIX field"),
+                .help("Set delimiter string to print after each FIX field."),
         )
         .arg(
             Arg::new("value")
                 .long("value")
                 .short('v')
-                .help("Translate common FIX values (for Side: 1 -> Buy)"),
+                .help("Translate the values of some tags. (for Side: 1 -> Buy)"),
+        )
+        .arg(
+            Arg::new("strip")
+                .long("strip")
+                .short('s')
+                .help("Strip the whitespace around the = in each field. Less human readable but closer to real FIX."),
         )
 }
