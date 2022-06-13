@@ -19,8 +19,9 @@ fn main() {
     };
     let delimiter = matches.value_of("delimiter").unwrap();
     let value_flag = matches.is_present("value");
+    let strip_flag = matches.is_present("strip");
 
-    if let Err(x) = prefix::run(&fix_message, value_flag, delimiter) {
+    if let Err(x) = prefix::run(&fix_message, value_flag, delimiter, strip_flag) {
         eprintln!("{}", x)
     }
 }
