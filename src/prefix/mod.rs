@@ -3,88 +3,6 @@ use regex::Regex;
 use std::io::{self, Write};
 use std::str::FromStr;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn basic_parse_case() {
-        let input = "8=4.4^1=test^55=EUR/USD";
-        let result = parse(input).unwrap();
-        let expected: Vec<Field> = vec![
-            Field {
-                tag: 8,
-                value: String::from("4.4"),
-            },
-            Field {
-                tag: 1,
-                value: String::from("test".to_string()),
-            },
-            Field {
-                tag: 55,
-                value: String::from("EUR/USD".to_string()),
-            },
-        ];
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn parse_case() {
-        let input =
-            "55=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^001=55:05:22";
-        let result = parse(input).unwrap();
-        let expected: Vec<Field> = vec![
-            Field {
-                tag: 55,
-                value: String::from("test"),
-            },
-            Field {
-                tag: 1,
-                value: String::from("aaa"),
-            },
-            Field {
-                tag: 8,
-                value: String::from("4.4"),
-            },
-            Field {
-                tag: 123,
-                value: String::from("Capital"),
-            },
-            Field {
-                tag: 55,
-                value: String::from("ETH-USD"),
-            },
-            Field {
-                tag: 001,
-                value: String::from("55:05:22"),
-            },
-        ];
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn format_case() {
-        let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
-        let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "|", false);
-        let expected = String::from(
-            "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
-        );
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn multiple_message_case() {
-        let input =
-            "8=FIX.4.2|1=ACCOUNT|299=1234^55=USDJPY\n8=FIX.4.4|1=ACCOUNT2|299=4321|55=EURJPY|";
-        let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "| ", true);
-        let expected =
-            String::from("BeginString=FIX.4.2| Account=ACCOUNT| QuoteEntryID=1234| Symbol=USDJPY| \nBeginString=FIX.4.4| Account=ACCOUNT2| QuoteEntryID=4321| Symbol=EURJPY| ");
-        assert_eq!(result, expected);
-    }
-}
-
 #[derive(Debug, PartialEq)]
 struct Field {
     tag: usize,
@@ -232,5 +150,67 @@ fn translate_value(field: &Field) -> &str {
             _ => &field.value,
         },
         _ => &field.value,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! field {
+        ($($tag:literal,$value:literal),+) => {
+            $(
+                Field{
+                    tag: $tag,
+                    value: String::from($value),
+                }
+            ),+
+        }
+    }
+
+    #[test]
+    fn basic_parse_case() {
+        let input = "8=4.4^1=test^55=EUR/USD";
+        let result = parse(input).unwrap();
+        let expected: Vec<Field> = vec![field!(8, "4.4"), field!(1, "test"), field!(55, "EUR/USD")];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn parse_case() {
+        let input =
+            "25=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^101=55:05:22";
+        let result = parse(input).unwrap();
+        let expected: Vec<Field> = vec![
+            field!(25, "test"),
+            field!(1, "aaa"),
+            field!(8, "4.4"),
+            field!(123, "Capital"),
+            field!(55, "ETH-USD"),
+            field!(101, "55:05:22"),
+        ];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn format_case() {
+        let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
+        let parsed = parse(input).unwrap();
+        let result = format_to_string(parsed, true, "|", false);
+        let expected = String::from(
+            "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn multiple_message_case() {
+        let input =
+            "8=FIX.4.2|1=ACCOUNT|299=1234^55=USDJPY\n8=FIX.4.4|1=ACCOUNT2|299=4321|55=EURJPY|";
+        let parsed = parse(input).unwrap();
+        let result = format_to_string(parsed, true, "| ", true);
+        let expected =
+            String::from("BeginString=FIX.4.2| Account=ACCOUNT| QuoteEntryID=1234| Symbol=USDJPY| \nBeginString=FIX.4.4| Account=ACCOUNT2| QuoteEntryID=4321| Symbol=EURJPY| ");
+        assert_eq!(result, expected);
     }
 }
