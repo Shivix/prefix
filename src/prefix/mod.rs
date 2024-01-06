@@ -1,4 +1,5 @@
 mod tags;
+use clap::ArgMatches;
 use regex::Regex;
 use std::io::{self, Write};
 use std::str::FromStr;
@@ -8,20 +9,46 @@ struct Field {
     tag: usize,
     value: String,
 }
+pub struct Flags {
+    value: bool,
+    strip: bool,
+    tag: bool,
+}
+
+pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
+    Flags {
+        value: matches.is_present("value"),
+        strip: matches.is_present("strip"),
+        tag: matches.is_present("tag"),
+    }
+}
 
 pub fn run(
-    input: &str,
-    value_flag: bool,
+    input: &Vec<String>,
     delimiter: &str,
-    strip: bool,
+    flags: Flags,
 ) -> Result<(), &'static str> {
-    let parsed = parse(input)?;
-    let to_print = format_to_string(parsed, value_flag, delimiter, strip);
-    print(to_print);
+    if flags.tag {
+        for tag in input {
+            print(parse_tag(tag));
+        }
+        return Ok(());
+    }
+    for msg in input {
+        let parsed = match parse_fix_msg(msg) {
+            Ok(parsed) => parsed,
+            Err(_) => {
+                println!("{}", msg);
+                continue;
+            },
+        };
+        let to_print = format_to_string(parsed, flags.value, delimiter, flags.strip);
+        print(&to_print);
+    }
     Ok(())
 }
 
-fn parse(input: &str) -> Result<Vec<Field>, &'static str> {
+fn parse_fix_msg(input: &str) -> Result<Vec<Field>, &'static str> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
     // Current delimiters used: ^ | SOH \n
@@ -40,6 +67,11 @@ fn parse(input: &str) -> Result<Vec<Field>, &'static str> {
         })
     }
     Ok(result)
+}
+
+fn parse_tag(input: &str) -> &str {
+    let tag = input.parse::<usize>().expect("invalid fix tag provided");
+    return tags::TAGS.get(tag).expect("not a standard fix tag");
 }
 
 fn format_to_string(
@@ -80,7 +112,7 @@ fn format_to_string(
     result
 }
 
-fn print(input: String) {
+fn print(input: &str) {
     let stdout = io::stdout();
     let mut handle = stdout.lock();
     handle
@@ -171,7 +203,7 @@ mod tests {
     #[test]
     fn basic_parse_case() {
         let input = "8=4.4^1=test^55=EUR/USD";
-        let result = parse(input).unwrap();
+        let result = parse_fix_msg(input).unwrap();
         let expected: Vec<Field> = vec![field!(8, "4.4"), field!(1, "test"), field!(55, "EUR/USD")];
         assert_eq!(result, expected);
     }
@@ -180,7 +212,7 @@ mod tests {
     fn parse_case() {
         let input =
             "25=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^101=55:05:22";
-        let result = parse(input).unwrap();
+        let result = parse_fix_msg(input).unwrap();
         let expected: Vec<Field> = vec![
             field!(25, "test"),
             field!(1, "aaa"),
@@ -195,7 +227,7 @@ mod tests {
     #[test]
     fn format_case() {
         let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
-        let parsed = parse(input).unwrap();
+        let parsed = parse_fix_msg(input).unwrap();
         let result = format_to_string(parsed, true, "|", false);
         let expected = String::from(
             "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
@@ -207,10 +239,17 @@ mod tests {
     fn multiple_message_case() {
         let input =
             "8=FIX.4.2|1=ACCOUNT|299=1234^55=USDJPY\n8=FIX.4.4|1=ACCOUNT2|299=4321|55=EURJPY|";
-        let parsed = parse(input).unwrap();
-        let result = format_to_string(parsed, true, "| ", true);
+        let parsed = parse_fix_msg(input).unwrap();
+        let result = format_to_string(parsed, true, "|", true);
         let expected =
-            String::from("BeginString=FIX.4.2| Account=ACCOUNT| QuoteEntryID=1234| Symbol=USDJPY| \nBeginString=FIX.4.4| Account=ACCOUNT2| QuoteEntryID=4321| Symbol=EURJPY| ");
+            String::from("BeginString=FIX.4.2|Account=ACCOUNT|QuoteEntryID=1234|Symbol=USDJPY|\nBeginString=FIX.4.4|Account=ACCOUNT2|QuoteEntryID=4321|Symbol=EURJPY|");
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn tag_case() {
+        let input = "55";
+        let parsed = parse_tag(input);
+        assert_eq!(parsed, "Symbol");
     }
 }

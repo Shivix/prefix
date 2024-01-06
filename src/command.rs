@@ -27,4 +27,10 @@ pub fn make_command() -> Command<'static> {
                 .short('s')
                 .help("Strip the whitespace around the = in each field. Less human readable but closer to real FIX."),
         )
+        .arg(
+            Arg::new("tag")
+                .long("tag")
+                .short('t')
+                .help("Translate numeric tags."),
+        )
 }
