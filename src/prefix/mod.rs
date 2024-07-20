@@ -19,10 +19,10 @@ pub struct Flags {
 
 pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
     Flags {
-        value: matches.is_present("value"),
-        strip: matches.is_present("strip"),
-        tag: matches.is_present("tag"),
-        summarise: matches.value_of("summarise").map(|a| a.to_string()),
+        value: matches.get_flag("value"),
+        strip: matches.get_flag("strip"),
+        tag: matches.get_flag("tag"),
+        summarise: matches.get_one::<String>("summarise").cloned(),
     }
 }
 
