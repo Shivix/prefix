@@ -9,10 +9,12 @@ struct Field {
     tag: usize,
     value: String,
 }
+
 pub struct Flags {
     value: bool,
     strip: bool,
     tag: bool,
+    summarise: Option<String>,
 }
 
 pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
@@ -20,14 +22,11 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
         value: matches.is_present("value"),
         strip: matches.is_present("strip"),
         tag: matches.is_present("tag"),
+        summarise: matches.value_of("summarise").map(|a| a.to_string()),
     }
 }
 
-pub fn run(
-    input: &Vec<String>,
-    delimiter: &str,
-    flags: Flags,
-) -> Result<(), &'static str> {
+pub fn run(input: &Vec<String>, delimiter: &str, flags: Flags) -> Result<(), &'static str> {
     if flags.tag {
         for tag in input {
             print(parse_tag(tag));
@@ -38,12 +37,21 @@ pub fn run(
         let parsed = match parse_fix_msg(msg) {
             Ok(parsed) => parsed,
             Err(_) => {
+                // Maintain non FIX lines.
                 println!("{}", msg);
                 continue;
-            },
+            }
         };
-        let to_print = format_to_string(parsed, flags.value, delimiter, flags.strip);
-        print(&to_print);
+        if let Some(ref template) = flags.summarise {
+            println!("{}", format_to_summary(parsed, template, flags.value));
+        } else {
+            print(&format_to_string(
+                parsed,
+                flags.value,
+                delimiter,
+                flags.strip,
+            ));
+        };
     }
     Ok(())
 }
@@ -108,6 +116,33 @@ fn format_to_string(
             false => &i.value,
         });
         result.push_str(delimiter);
+    }
+    result
+}
+
+fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> String {
+    let mut result = String::from(template);
+    let mut order_type = String::new();
+    for field in input {
+        let value = if value_flag {
+            translate_value(&field)
+        } else {
+            &field.value
+        };
+        if !template.is_empty() {
+            // Replace tag numbers in template to tag name.
+            /* TODO: How in efficient is attempting to search and replace for each field?
+             *       Profile and consider parsing which tags are in template first. */
+            result = result.replace(&field.tag.to_string(), value);
+        }
+        if field.tag == 35 {
+            order_type = field.value;
+        }
+    }
+    for msg_type in tags::MSG_TYPES {
+        if msg_type.0 == order_type {
+            result = msg_type.1.to_string() + &result;
+        }
     }
     result
 }

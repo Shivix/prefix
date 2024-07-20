@@ -33,4 +33,13 @@ pub fn make_command() -> Command<'static> {
                 .short('t')
                 .help("Translate numeric tags."),
         )
+        .arg(
+            Arg::new("summarise")
+                .long("summarise")
+                .short('z')
+                .takes_value(true)
+                .default_missing_value("")
+                .value_name("template")
+                .help("Summarise each fix message based on a template."),
+        )
 }
