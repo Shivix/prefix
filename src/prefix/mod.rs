@@ -1,7 +1,6 @@
 mod tags;
 use clap::ArgMatches;
 use regex::Regex;
-use std::io::{self, Write};
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
@@ -29,7 +28,7 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
 pub fn run(input: &Vec<String>, delimiter: &str, flags: Flags) -> Result<(), &'static str> {
     if flags.tag {
         for tag in input {
-            print(parse_tag(tag));
+            print!("{}", parse_tag(tag));
         }
         return Ok(());
     }
@@ -45,12 +44,10 @@ pub fn run(input: &Vec<String>, delimiter: &str, flags: Flags) -> Result<(), &'s
         if let Some(ref template) = flags.summarise {
             println!("{}", format_to_summary(parsed, template, flags.value));
         } else {
-            print(&format_to_string(
-                parsed,
-                flags.value,
-                delimiter,
-                flags.strip,
-            ));
+            println!(
+                "{}",
+                &format_to_string(parsed, flags.value, delimiter, flags.strip,)
+            );
         };
     }
     Ok(())
@@ -89,17 +86,7 @@ fn format_to_string(
     strip_flag: bool,
 ) -> String {
     let mut result = String::new();
-    let mut msg_counter = 0;
     for i in input {
-        /* makes it easier to mentally parse seperate messages with default args and easier to
-         * computationally parse when using a delimiter such as | ensures each message is on its
-         * own line */
-        if i.tag == 8 {
-            msg_counter += 1;
-            if msg_counter > 1 {
-                result.push('\n');
-            }
-        }
         // Allow custom tags to still be printed without translation
         if i.tag >= tags::TAGS.len() {
             result.push_str(&i.tag.to_string());
@@ -141,18 +128,10 @@ fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> Str
     }
     for msg_type in tags::MSG_TYPES {
         if msg_type.0 == order_type {
-            result = msg_type.1.to_string() + &result;
+            result = format!("{} {}", msg_type.1, result);
         }
     }
     result
-}
-
-fn print(input: &str) {
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    handle
-        .write_all(input.as_bytes())
-        .expect("could not print to stdout");
 }
 
 // Not ideal but leaves it simple and easy for anyone to add values. This function is opt in.
