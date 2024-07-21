@@ -12,8 +12,5 @@ fn main() {
     };
 
     let flags = prefix::matches_to_flags(&matches);
-
-    if let Err(x) = prefix::run(&fix_message, flags) {
-        eprintln!("{}", x)
-    }
+    prefix::run(&fix_message, flags);
 }

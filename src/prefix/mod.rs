@@ -1,7 +1,10 @@
 mod tags;
 use clap::ArgMatches;
 use regex::Regex;
-use std::{io::{self, IsTerminal}, str::FromStr};
+use std::{
+    io::{self, IsTerminal},
+    str::FromStr,
+};
 
 #[derive(Debug, PartialEq)]
 struct Field {
@@ -31,11 +34,11 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     }
 }
 
-pub fn run(input: &Vec<String>, flags: Options) -> Result<(), &'static str> {
+pub fn run(input: &Vec<String>, flags: Options) {
     for line in input {
         let parsed = match parse_fix_msg(line) {
-            Ok(parsed) => parsed,
-            Err(_) => {
+            Some(parsed) => parsed,
+            None => {
                 if flags.tag {
                     println!("{}", parse_tags(line));
                 } else {
@@ -48,16 +51,12 @@ pub fn run(input: &Vec<String>, flags: Options) -> Result<(), &'static str> {
         if let Some(ref template) = flags.summarise {
             println!("{}", format_to_summary(parsed, template, flags.value));
         } else {
-            println!(
-                "{}",
-                format_to_string(parsed, &flags)
-            );
+            println!("{}", format_to_string(parsed, &flags));
         };
     }
-    Ok(())
 }
 
-fn parse_fix_msg(input: &str) -> Result<Vec<Field>, &'static str> {
+fn parse_fix_msg(input: &str) -> Option<Vec<Field>> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
     // Current delimiters used: ^ | SOH \n
@@ -65,8 +64,8 @@ fn parse_fix_msg(input: &str) -> Result<Vec<Field>, &'static str> {
     let mut result = Vec::<Field>::new();
 
     if !regex.is_match(input) {
-        // Do not panic on not finding a FIX message. Allows prefix to work well with fzf
-        return Err("cannot find a valid FIX message");
+        // If a log file is being piped in, it's expected to have some lines without FIX messages.
+        return None;
     }
 
     for i in regex.captures_iter(input) {
@@ -75,7 +74,7 @@ fn parse_fix_msg(input: &str) -> Result<Vec<Field>, &'static str> {
             value: i["value"].to_string(),
         })
     }
-    Ok(result)
+    Some(result)
 }
 
 fn parse_tags(input: &str) -> String {
@@ -96,10 +95,7 @@ fn add_colour(input: &str, use_colour: bool) -> String {
     }
 }
 
-fn format_to_string(
-    input: Vec<Field>,
-    flags: &Options,
-) -> String {
+fn format_to_string(input: Vec<Field>, flags: &Options) -> String {
     let mut result = String::new();
     for field in input {
         // Allow custom tags to still be printed without translation
