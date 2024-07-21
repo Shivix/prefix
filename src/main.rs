@@ -10,10 +10,10 @@ fn main() {
         Some(msg) => msg.map(|elem| elem.to_owned()).collect(),
         None => io::stdin().lines().map(|line| line.unwrap()).collect(),
     };
-    let delimiter = matches.get_one::<String>("delimiter").unwrap();
+
     let flags = prefix::matches_to_flags(&matches);
 
-    if let Err(x) = prefix::run(&fix_message, delimiter, flags) {
+    if let Err(x) = prefix::run(&fix_message, flags) {
         eprintln!("{}", x)
     }
 }

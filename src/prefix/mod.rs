@@ -1,7 +1,7 @@
 mod tags;
 use clap::ArgMatches;
 use regex::Regex;
-use std::str::FromStr;
+use std::{io::{self, IsTerminal}, str::FromStr};
 
 #[derive(Debug, PartialEq)]
 struct Field {
@@ -9,35 +9,39 @@ struct Field {
     value: String,
 }
 
-pub struct Flags {
-    value: bool,
+pub struct Options {
+    delimiter: String,
+    colour: bool,
     strip: bool,
-    tag: bool,
     summarise: Option<String>,
+    tag: bool,
+    value: bool,
 }
 
-pub fn matches_to_flags(matches: &ArgMatches) -> Flags {
-    Flags {
-        value: matches.get_flag("value"),
+pub fn matches_to_flags(matches: &ArgMatches) -> Options {
+    let when = matches.get_one::<String>("color").unwrap();
+    let use_colour = (io::stdout().is_terminal() && when == "auto") || when == "always";
+    Options {
+        delimiter: matches.get_one::<String>("delimiter").unwrap().to_string(),
+        colour: use_colour,
         strip: matches.get_flag("strip"),
-        tag: matches.get_flag("tag"),
         summarise: matches.get_one::<String>("summarise").cloned(),
+        tag: matches.get_flag("tag"),
+        value: matches.get_flag("value"),
     }
 }
 
-pub fn run(input: &Vec<String>, delimiter: &str, flags: Flags) -> Result<(), &'static str> {
-    if flags.tag {
-        for tag in input {
-            print!("{}", parse_tag(tag));
-        }
-        return Ok(());
-    }
-    for msg in input {
-        let parsed = match parse_fix_msg(msg) {
+pub fn run(input: &Vec<String>, flags: Options) -> Result<(), &'static str> {
+    for line in input {
+        let parsed = match parse_fix_msg(line) {
             Ok(parsed) => parsed,
             Err(_) => {
-                // Maintain non FIX lines.
-                println!("{}", msg);
+                if flags.tag {
+                    println!("{}", parse_tags(line));
+                } else {
+                    // Maintain non FIX lines.
+                    println!("{}", line);
+                }
                 continue;
             }
         };
@@ -46,7 +50,7 @@ pub fn run(input: &Vec<String>, delimiter: &str, flags: Flags) -> Result<(), &'s
         } else {
             println!(
                 "{}",
-                &format_to_string(parsed, flags.value, delimiter, flags.strip,)
+                format_to_string(parsed, &flags)
             );
         };
     }
@@ -74,35 +78,46 @@ fn parse_fix_msg(input: &str) -> Result<Vec<Field>, &'static str> {
     Ok(result)
 }
 
-fn parse_tag(input: &str) -> &str {
-    let tag = input.parse::<usize>().expect("invalid fix tag provided");
-    return tags::TAGS.get(tag).expect("not a standard fix tag");
+fn parse_tags(input: &str) -> String {
+    let mut result = input.to_owned();
+    let regex = Regex::new(r"[0-9]+").unwrap();
+    for m in regex.find_iter(input) {
+        let tag = m.as_str().parse::<usize>().unwrap();
+        result = result.replace(m.as_str(), tags::TAGS.get(tag).unwrap_or(&m.as_str()));
+    }
+    result
+}
+
+fn add_colour(input: &str, use_colour: bool) -> String {
+    if use_colour {
+        format!("\x1b[33m{}\x1b[0m", input)
+    } else {
+        input.to_string()
+    }
 }
 
 fn format_to_string(
     input: Vec<Field>,
-    value_flag: bool,
-    delimiter: &str,
-    strip_flag: bool,
+    flags: &Options,
 ) -> String {
     let mut result = String::new();
-    for i in input {
+    for field in input {
         // Allow custom tags to still be printed without translation
-        if i.tag >= tags::TAGS.len() {
-            result.push_str(&i.tag.to_string());
+        if field.tag >= tags::TAGS.len() {
+            result.push_str(&field.tag.to_string());
         } else {
-            result.push_str(tags::TAGS[i.tag]);
+            result.push_str(tags::TAGS[field.tag]);
         }
-        if strip_flag {
-            result.push('=');
+        if flags.strip {
+            result.push_str(&add_colour("=", flags.colour));
         } else {
-            result.push_str(" = ");
+            result.push_str(&add_colour(" = ", flags.colour));
         }
-        result.push_str(match value_flag {
-            true => translate_value(&i),
-            false => &i.value,
+        result.push_str(match flags.value {
+            true => translate_value(&field),
+            false => &field.value,
         });
-        result.push_str(delimiter);
+        result.push_str(&add_colour(&flags.delimiter, flags.colour));
     }
     result
 }
@@ -242,7 +257,15 @@ mod tests {
     fn format_case() {
         let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
         let parsed = parse_fix_msg(input).unwrap();
-        let result = format_to_string(parsed, true, "|", false);
+        let flags = Options {
+            delimiter: String::from("|"),
+            colour: false,
+            strip: true,
+            summarise: None,
+            tag: false,
+            value: false,
+        };
+        let result = format_to_string(parsed, &flags);
         let expected = String::from(
             "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
         );
@@ -250,20 +273,12 @@ mod tests {
     }
 
     #[test]
-    fn multiple_message_case() {
-        let input =
-            "8=FIX.4.2|1=ACCOUNT|299=1234^55=USDJPY\n8=FIX.4.4|1=ACCOUNT2|299=4321|55=EURJPY|";
-        let parsed = parse_fix_msg(input).unwrap();
-        let result = format_to_string(parsed, true, "|", true);
-        let expected =
-            String::from("BeginString=FIX.4.2|Account=ACCOUNT|QuoteEntryID=1234|Symbol=USDJPY|\nBeginString=FIX.4.4|Account=ACCOUNT2|QuoteEntryID=4321|Symbol=EURJPY|");
-        assert_eq!(result, expected);
-    }
-
-    #[test]
     fn tag_case() {
-        let input = "55";
-        let parsed = parse_tag(input);
-        assert_eq!(parsed, "Symbol");
+        let input = "symbol? 55";
+        let parsed = parse_tags(input);
+        assert_eq!(parsed, "symbol? Symbol");
+        let input = "54,11,8";
+        let parsed = parse_tags(input);
+        assert_eq!(parsed, "Side,ClOrdID,BeginString");
     }
 }

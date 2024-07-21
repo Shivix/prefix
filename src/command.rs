@@ -8,11 +8,17 @@ pub fn make_command() -> Command {
             "FIX message to be parsed, if not provided will look for a message piped through stdin",
         ))
         .arg(
+            arg!(-c --color <when> "Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty")
+                .alias("colour")
+                .value_parser(["always", "auto", "never"])
+                .default_value("auto"),
+        )
+        .arg(
             arg!(-d --delimiter <delimiter> "Set delimiter string to print after each FIX field")
                 .default_value("\n")
         )
         .arg(
-            arg!(-s --strip "Strip the whitespace around the = in each field. Less human readable but closer to real FIX")
+            arg!(-s --strip "Strip the whitespace around the = in each field")
                 .action(ArgAction::SetTrue)
         )
         .arg(
