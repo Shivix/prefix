@@ -25,7 +25,7 @@ Register-ArgumentCompleter -Native -CommandName 'prefix' -ScriptBlock {
             [CompletionResult]::new('--color', 'color', [CompletionResultType]::ParameterName, 'Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty')
             [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field')
-            [CompletionResult]::new('-z', 'z', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
+            [CompletionResult]::new('-S', 'S ', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
             [CompletionResult]::new('--summary', 'summary', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
             [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')
             [CompletionResult]::new('--strip', 'strip', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')

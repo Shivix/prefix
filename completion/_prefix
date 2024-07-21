@@ -19,7 +19,7 @@ _prefix() {
 '--color=[Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty]:when:(always auto never)' \
 '-d+[Set delimiter string to print after each FIX field]:delimiter: ' \
 '--delimiter=[Set delimiter string to print after each FIX field]:delimiter: ' \
-'-z+[Summarise each fix message based on an optional template]' \
+'-S+[Summarise each fix message based on an optional template]' \
 '--summary=[Summarise each fix message based on an optional template]' \
 '-s[Strip the whitespace around the = in each field]' \
 '--strip[Strip the whitespace around the = in each field]' \

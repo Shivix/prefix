@@ -19,7 +19,7 @@ _prefix() {
 
     case "${cmd}" in
         prefix)
-            opts="-c -d -s -z -t -v -h -V --color --delimiter --strip --summary --tag --value --help --version [message]..."
+            opts="-c -d -s -S -t -v -h -V --color --delimiter --strip --summary --tag --value --help --version [message]..."
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -45,7 +45,7 @@ _prefix() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                -z)
+                -S)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;

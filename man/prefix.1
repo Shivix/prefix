@@ -1,10 +1,10 @@
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
-.TH prefix 1  "prefix 1.1.0" 
+.TH prefix 1  "prefix 1.1.1" 
 .SH NAME
 prefix \- A customizable pretty printer for FIX messages
 .SH SYNOPSIS
-\fBprefix\fR [\fB\-c\fR|\fB\-\-color\fR] [\fB\-d\fR|\fB\-\-delimiter\fR] [\fB\-s\fR|\fB\-\-strip\fR] [\fB\-z\fR|\fB\-\-summary\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-v\fR|\fB\-\-value\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fImessage\fR] 
+\fBprefix\fR [\fB\-c\fR|\fB\-\-color\fR] [\fB\-d\fR|\fB\-\-delimiter\fR] [\fB\-s\fR|\fB\-\-strip\fR] [\fB\-S\fR|\fB\-\-summary\fR] [\fB\-t\fR|\fB\-\-tag\fR] [\fB\-v\fR|\fB\-\-value\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fImessage\fR] 
 .SH DESCRIPTION
 A customizable pretty printer for FIX messages
 .SH OPTIONS
@@ -22,7 +22,7 @@ Set delimiter string to print after each FIX field
 \fB\-s\fR, \fB\-\-strip\fR
 Strip the whitespace around the = in each field
 .TP
-\fB\-z\fR, \fB\-\-summary\fR=\fItemplate\fR
+\fB\-S\fR, \fB\-\-summary\fR=\fItemplate\fR
 Summarise each fix message based on an optional template
 .TP
 \fB\-t\fR, \fB\-\-tag\fR
@@ -40,4 +40,4 @@ Print version
 [\fImessage\fR]
 FIX message to be parsed, if not provided will look for a message piped through stdin
 .SH VERSION
-v1.1.0
+v1.1.1
