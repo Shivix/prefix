@@ -1,10 +1,9 @@
 mod tags;
+
 use clap::ArgMatches;
+use once_cell::sync::Lazy;
 use regex::Regex;
-use std::{
-    io::{self, IsTerminal},
-    str::FromStr,
-};
+use std::io::{self, IsTerminal};
 
 #[derive(Debug, PartialEq)]
 struct Field {
@@ -16,10 +15,14 @@ pub struct Options {
     delimiter: String,
     colour: bool,
     strip: bool,
-    summarise: Option<String>,
+    summary: Option<String>,
     tag: bool,
     value: bool,
 }
+
+static FIX_MSG_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01\n]+)").expect("bad regex"));
+static FIX_TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"[0-9]+").unwrap());
 
 pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     let when = matches.get_one::<String>("color").unwrap();
@@ -28,7 +31,7 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
         delimiter: matches.get_one::<String>("delimiter").unwrap().to_string(),
         colour: use_colour,
         strip: matches.get_flag("strip"),
-        summarise: matches.get_one::<String>("summarise").cloned(),
+        summary: matches.get_one::<String>("summary").cloned(),
         tag: matches.get_flag("tag"),
         value: matches.get_flag("value"),
     }
@@ -48,7 +51,10 @@ pub fn run(input: &Vec<String>, flags: Options) {
                 continue;
             }
         };
-        if let Some(ref template) = flags.summarise {
+        if let Some(ref template) = flags.summary {
+            /* TODO: Majority of the time is spent parsing the FIX message, but we likely only use
+             * a few fields. Could likely get alot of speed up for --summary if we only parse the
+             * fields in the template. */
             println!("{}", format_to_summary(parsed, template, flags.value));
         } else {
             println!("{}", format_to_string(parsed, &flags));
@@ -60,17 +66,17 @@ fn parse_fix_msg(input: &str) -> Option<Vec<Field>> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
     // Current delimiters used: ^ | SOH \n
-    let regex = Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01\n]+)").expect("bad regex");
-    let mut result = Vec::<Field>::new();
+    let regex = &FIX_MSG_REGEX;
 
     if !regex.is_match(input) {
         // If a log file is being piped in, it's expected to have some lines without FIX messages.
         return None;
     }
 
+    let mut result = Vec::new();
     for i in regex.captures_iter(input) {
         result.push(Field {
-            tag: FromStr::from_str(&i["tag"]).expect("cannot parse tag"),
+            tag: i["tag"].parse().ok()?,
             value: i["value"].to_string(),
         })
     }
@@ -79,7 +85,7 @@ fn parse_fix_msg(input: &str) -> Option<Vec<Field>> {
 
 fn parse_tags(input: &str) -> String {
     let mut result = input.to_owned();
-    let regex = Regex::new(r"[0-9]+").unwrap();
+    let regex = &FIX_TAG_REGEX;
     for m in regex.find_iter(input) {
         let tag = m.as_str().parse::<usize>().unwrap();
         result = result.replace(m.as_str(), tags::TAGS.get(tag).unwrap_or(&m.as_str()));
@@ -96,26 +102,21 @@ fn add_colour(input: &str, use_colour: bool) -> String {
 }
 
 fn format_to_string(input: Vec<Field>, flags: &Options) -> String {
-    let mut result = String::new();
-    for field in input {
+    input.iter().fold(String::new(), |result, field| {
         // Allow custom tags to still be printed without translation
-        if field.tag >= tags::TAGS.len() {
-            result.push_str(&field.tag.to_string());
+        let tag = if field.tag >= tags::TAGS.len() {
+            &field.tag.to_string()
         } else {
-            result.push_str(tags::TAGS[field.tag]);
-        }
-        if flags.strip {
-            result.push_str(&add_colour("=", flags.colour));
-        } else {
-            result.push_str(&add_colour(" = ", flags.colour));
-        }
-        result.push_str(match flags.value {
-            true => translate_value(&field),
+            tags::TAGS[field.tag]
+        };
+        let separator = add_colour(if flags.strip { "=" } else { " = " }, flags.colour);
+        let value = match flags.value {
+            true => translate_value(field),
             false => &field.value,
-        });
-        result.push_str(&add_colour(&flags.delimiter, flags.colour));
-    }
-    result
+        };
+        let delimiter = add_colour(&flags.delimiter, flags.colour);
+        result + tag + &separator + value + &delimiter
+    })
 }
 
 fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> String {
@@ -129,8 +130,6 @@ fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> Str
         };
         if !template.is_empty() {
             // Replace tag numbers in template to tag name.
-            /* TODO: How in efficient is attempting to search and replace for each field?
-             *       Profile and consider parsing which tags are in template first. */
             result = result.replace(&field.tag.to_string(), value);
         }
         if field.tag == 35 {
@@ -256,10 +255,10 @@ mod tests {
         let flags = Options {
             delimiter: String::from("|"),
             colour: false,
-            strip: true,
-            summarise: None,
+            strip: false,
+            summary: None,
             tag: false,
-            value: false,
+            value: true,
         };
         let result = format_to_string(parsed, &flags);
         let expected = String::from(

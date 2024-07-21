@@ -22,7 +22,7 @@ pub fn make_command() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            arg!(-z --summarise [template] "Summarise each fix message based on an optional template")
+            arg!(-z --summary [template] "Summarise each fix message based on an optional template")
                 .default_missing_value("")
         )
         .arg(

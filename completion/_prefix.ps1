@@ -21,16 +21,22 @@ Register-ArgumentCompleter -Native -CommandName 'prefix' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'prefix' {
-            [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field.')
-            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field.')
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information')
-            [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
-            [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version information')
-            [CompletionResult]::new('-v', 'v', [CompletionResultType]::ParameterName, 'Translate the values of some tags. (for Side: 1 -> Buy)')
-            [CompletionResult]::new('--value', 'value', [CompletionResultType]::ParameterName, 'Translate the values of some tags. (for Side: 1 -> Buy)')
-            [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field. Less human readable but closer to real FIX.')
-            [CompletionResult]::new('--strip', 'strip', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field. Less human readable but closer to real FIX.')
+            [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty')
+            [CompletionResult]::new('--color', 'color', [CompletionResultType]::ParameterName, 'Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty')
+            [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'Set delimiter string to print after each FIX field')
+            [CompletionResult]::new('-z', 'z', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
+            [CompletionResult]::new('--summary', 'summary', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
+            [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')
+            [CompletionResult]::new('--strip', 'strip', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')
+            [CompletionResult]::new('-t', 't', [CompletionResultType]::ParameterName, 'Translate all numbers to tag names whether part of a message or not')
+            [CompletionResult]::new('--tag', 'tag', [CompletionResultType]::ParameterName, 'Translate all numbers to tag names whether part of a message or not')
+            [CompletionResult]::new('-v', 'v', [CompletionResultType]::ParameterName, 'Translate the values of some tags (for Side: 1 -> Buy)')
+            [CompletionResult]::new('--value', 'value', [CompletionResultType]::ParameterName, 'Translate the values of some tags (for Side: 1 -> Buy)')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version')
             break
         }
     })

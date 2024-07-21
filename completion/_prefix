@@ -14,17 +14,23 @@ _prefix() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
-'-d+[Set delimiter string to print after each FIX field.]: : ' \
-'--delimiter=[Set delimiter string to print after each FIX field.]: : ' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
-'-v[Translate the values of some tags. (for Side: 1 -> Buy)]' \
-'--value[Translate the values of some tags. (for Side: 1 -> Buy)]' \
-'-s[Strip the whitespace around the = in each field. Less human readable but closer to real FIX.]' \
-'--strip[Strip the whitespace around the = in each field. Less human readable but closer to real FIX.]' \
+    _arguments "${_arguments_options[@]}" : \
+'-c+[Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty]:when:(always auto never)' \
+'--color=[Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty]:when:(always auto never)' \
+'-d+[Set delimiter string to print after each FIX field]:delimiter: ' \
+'--delimiter=[Set delimiter string to print after each FIX field]:delimiter: ' \
+'-z+[Summarise each fix message based on an optional template]' \
+'--summary=[Summarise each fix message based on an optional template]' \
+'-s[Strip the whitespace around the = in each field]' \
+'--strip[Strip the whitespace around the = in each field]' \
+'-t[Translate all numbers to tag names whether part of a message or not]' \
+'--tag[Translate all numbers to tag names whether part of a message or not]' \
+'-v[Translate the values of some tags (for Side\: 1 -> Buy)]' \
+'--value[Translate the values of some tags (for Side\: 1 -> Buy)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 '*::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
 && ret=0
 }
@@ -35,4 +41,8 @@ _prefix_commands() {
     _describe -t commands 'prefix commands' commands "$@"
 }
 
-_prefix "$@"
+if [ "$funcstack[1]" = "_prefix" ]; then
+    _prefix "$@"
+else
+    compdef _prefix prefix
+fi

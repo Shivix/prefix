@@ -176,3 +176,5 @@ target/
 **/*.rs.bk
 
 notes.md
+test.txt
+large_test.txt
