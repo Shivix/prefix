@@ -17,6 +17,7 @@ pub struct Options {
     summary: Option<String>,
     tag: bool,
     value: bool,
+    only_fix: bool,
 }
 
 pub fn matches_to_flags(matches: &ArgMatches) -> Options {
@@ -29,6 +30,7 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
         summary: matches.get_one::<String>("summary").cloned(),
         tag: matches.get_flag("tag"),
         value: matches.get_flag("value"),
+        only_fix: matches.get_flag("only-fix"),
     }
 }
 
@@ -50,16 +52,15 @@ pub fn run(input: &Vec<String>, flags: Options) {
                 if flags.tag {
                     println!("{}", parse_tags(line, &fix_tag_regex));
                 } else {
-                    // Maintain non FIX lines.
-                    println!("{}", line);
+                    if !flags.only_fix {
+                        // Maintain non FIX lines.
+                        println!("{}", line);
+                    }
                 }
                 continue;
             }
         };
         if let Some(ref template) = flags.summary {
-            /* TODO: Majority of the time is spent parsing the FIX message, but we likely only use
-             * a few fields. Could likely get alot of speed up for --summary if we only parse the
-             * fields in the template. */
             println!("{}", format_to_summary(parsed, template, flags.value));
         } else {
             println!("{}", format_to_string(parsed, &flags));
@@ -112,10 +113,7 @@ fn format_to_string(input: Vec<Field>, flags: &Options) -> String {
             tags::TAGS[field.tag]
         };
         let separator = add_colour(if flags.strip { "=" } else { " = " }, flags.colour);
-        let value = match flags.value {
-            true => translate_value(field),
-            false => &field.value,
-        };
+        let value = if flags.value { translate_value(field) } else { &field.value };
         let delimiter = add_colour(&flags.delimiter, flags.colour);
         result + tag + &separator + value + &delimiter
     })
@@ -261,6 +259,7 @@ mod tests {
             summary: None,
             tag: false,
             value: true,
+            only_fix: false,
         };
         let result = format_to_string(parsed, &flags);
         let expected = String::from(

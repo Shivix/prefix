@@ -18,6 +18,10 @@ pub fn make_command() -> Command {
                 .default_value("\n")
         )
         .arg(
+            arg!(-o --"only-fix" "Only print FIX messages")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
             arg!(-s --strip "Strip the whitespace around the = in each field")
                 .action(ArgAction::SetTrue)
         )
