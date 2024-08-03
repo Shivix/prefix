@@ -27,7 +27,6 @@ categories = [
 [dependencies]
 regex = "1.10.5"
 clap = "4.5.9"
-once_cell = "1.19.0"
 
 [build-dependencies]
 clap = "4.5.9"

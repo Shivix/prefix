@@ -1,7 +1,6 @@
 mod tags;
 
 use clap::ArgMatches;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::io::{self, IsTerminal};
 
@@ -20,10 +19,6 @@ pub struct Options {
     value: bool,
 }
 
-static FIX_MSG_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01\n]+)").expect("bad regex"));
-static FIX_TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"[0-9]+").unwrap());
-
 pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     let when = matches.get_one::<String>("color").unwrap();
     let use_colour = (io::stdout().is_terminal() && when == "auto") || when == "always";
@@ -37,13 +32,23 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     }
 }
 
+fn get_msg_regex() -> Regex {
+    Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01\n]+)").unwrap()
+}
+
+fn get_tag_regex() -> Regex {
+    Regex::new(r"[0-9]+").unwrap()
+}
+
 pub fn run(input: &Vec<String>, flags: Options) {
+    let fix_msg_regex = get_msg_regex();
+    let fix_tag_regex = get_tag_regex();
     for line in input {
-        let parsed = match parse_fix_msg(line) {
+        let parsed = match parse_fix_msg(line, &fix_msg_regex) {
             Some(parsed) => parsed,
             None => {
                 if flags.tag {
-                    println!("{}", parse_tags(line));
+                    println!("{}", parse_tags(line, &fix_tag_regex));
                 } else {
                     // Maintain non FIX lines.
                     println!("{}", line);
@@ -62,12 +67,10 @@ pub fn run(input: &Vec<String>, flags: Options) {
     }
 }
 
-fn parse_fix_msg(input: &str) -> Option<Vec<Field>> {
+fn parse_fix_msg(input: &str, regex: &Regex) -> Option<Vec<Field>> {
     let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
     // Current delimiters used: ^ | SOH \n
-    let regex = &FIX_MSG_REGEX;
-
     if !regex.is_match(input) {
         // If a log file is being piped in, it's expected to have some lines without FIX messages.
         return None;
@@ -83,9 +86,8 @@ fn parse_fix_msg(input: &str) -> Option<Vec<Field>> {
     Some(result)
 }
 
-fn parse_tags(input: &str) -> String {
+fn parse_tags(input: &str, regex: &Regex) -> String {
     let mut result = input.to_owned();
-    let regex = &FIX_TAG_REGEX;
     for m in regex.find_iter(input) {
         let tag = m.as_str().parse::<usize>().unwrap();
         result = result.replace(m.as_str(), tags::TAGS.get(tag).unwrap_or(&m.as_str()));
@@ -227,7 +229,7 @@ mod tests {
     #[test]
     fn basic_parse_case() {
         let input = "8=4.4^1=test^55=EUR/USD";
-        let result = parse_fix_msg(input).unwrap();
+        let result = parse_fix_msg(input, &get_msg_regex()).unwrap();
         let expected: Vec<Field> = vec![field!(8, "4.4"), field!(1, "test"), field!(55, "EUR/USD")];
         assert_eq!(result, expected);
     }
@@ -236,7 +238,7 @@ mod tests {
     fn parse_case() {
         let input =
             "25=test^1=aaa^8=4.4^123=Capital^243:log[]efssdfkj39809^55=ETH-USD^101=55:05:22";
-        let result = parse_fix_msg(input).unwrap();
+        let result = parse_fix_msg(input, &get_msg_regex()).unwrap();
         let expected: Vec<Field> = vec![
             field!(25, "test"),
             field!(1, "aaa"),
@@ -251,7 +253,7 @@ mod tests {
     #[test]
     fn format_case() {
         let input = "8=FIX.4.4^1=test^55=ETH/USD^54=1^29999=50";
-        let parsed = parse_fix_msg(input).unwrap();
+        let parsed = parse_fix_msg(input, &get_msg_regex()).unwrap();
         let flags = Options {
             delimiter: String::from("|"),
             colour: false,
@@ -270,10 +272,10 @@ mod tests {
     #[test]
     fn tag_case() {
         let input = "symbol? 55";
-        let parsed = parse_tags(input);
+        let parsed = parse_tags(input, &get_tag_regex());
         assert_eq!(parsed, "symbol? Symbol");
         let input = "54,11,8";
-        let parsed = parse_tags(input);
+        let parsed = parse_tags(input, &get_tag_regex());
         assert_eq!(parsed, "Side,ClOrdID,BeginString");
     }
 }
