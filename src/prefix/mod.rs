@@ -35,7 +35,7 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
 }
 
 fn get_msg_regex() -> Regex {
-    Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01\n]+)").unwrap()
+    Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").unwrap()
 }
 
 fn get_tag_regex() -> Regex {
@@ -45,33 +45,27 @@ fn get_tag_regex() -> Regex {
 pub fn run(input: &Vec<String>, flags: Options) {
     let fix_msg_regex = get_msg_regex();
     let fix_tag_regex = get_tag_regex();
+
     for line in input {
-        let parsed = match parse_fix_msg(line, &fix_msg_regex) {
-            Some(parsed) => parsed,
-            None => {
-                if flags.tag {
-                    println!("{}", parse_tags(line, &fix_tag_regex));
-                } else {
-                    if !flags.only_fix {
-                        // Maintain non FIX lines.
-                        println!("{}", line);
-                    }
-                }
-                continue;
+        if let Some(parsed) = parse_fix_msg(line, &fix_msg_regex) {
+            if let Some(ref template) = flags.summary {
+                println!("{}", format_to_summary(&parsed, template, flags.value));
+            } else {
+                println!("{}", format_to_string(&parsed, &flags));
+            };
+        } else if !flags.only_fix {
+            if flags.tag {
+                println!("{}", parse_tags(line, &fix_tag_regex));
+            } else {
+                println!("{}", line);
             }
-        };
-        if let Some(ref template) = flags.summary {
-            println!("{}", format_to_summary(parsed, template, flags.value));
-        } else {
-            println!("{}", format_to_string(parsed, &flags));
-        };
+        }
     }
 }
 
 fn parse_fix_msg(input: &str, regex: &Regex) -> Option<Vec<Field>> {
-    let input = input.trim();
     // matches against a number followed by an = followed by anything excluding the given delimiters
-    // Current delimiters used: ^ | SOH \n
+    // Current delimiters used: ^ | SOH
     if !regex.is_match(input) {
         // If a log file is being piped in, it's expected to have some lines without FIX messages.
         return None;
@@ -84,6 +78,8 @@ fn parse_fix_msg(input: &str, regex: &Regex) -> Option<Vec<Field>> {
             value: i["value"].to_string(),
         })
     }
+    /* TODO: Should we check if it's a full FIX message? (contains both BeginString and CheckSum?)
+     * Maybe return an enum for full/ partial/ no FIX and have a new option for strictness? */
     Some(result)
 }
 
@@ -104,7 +100,7 @@ fn add_colour(input: &str, use_colour: bool) -> String {
     }
 }
 
-fn format_to_string(input: Vec<Field>, flags: &Options) -> String {
+fn format_to_string(input: &Vec<Field>, flags: &Options) -> String {
     input.iter().fold(String::new(), |result, field| {
         // Allow custom tags to still be printed without translation
         let tag = if field.tag >= tags::TAGS.len() {
@@ -113,15 +109,18 @@ fn format_to_string(input: Vec<Field>, flags: &Options) -> String {
             tags::TAGS[field.tag]
         };
         let separator = add_colour(if flags.strip { "=" } else { " = " }, flags.colour);
-        let value = if flags.value { translate_value(field) } else { &field.value };
+        let value = if flags.value {
+            translate_value(field)
+        } else {
+            &field.value
+        };
         let delimiter = add_colour(&flags.delimiter, flags.colour);
         result + tag + &separator + value + &delimiter
     })
 }
 
-fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> String {
+fn format_to_summary(input: &Vec<Field>, template: &str, value_flag: bool) -> String {
     let mut result = String::from(template);
-    let mut order_type = String::new();
     for field in input {
         let value = if value_flag {
             translate_value(&field)
@@ -133,12 +132,12 @@ fn format_to_summary(input: Vec<Field>, template: &str, value_flag: bool) -> Str
             result = result.replace(&field.tag.to_string(), value);
         }
         if field.tag == 35 {
-            order_type = field.value;
-        }
-    }
-    for msg_type in tags::MSG_TYPES {
-        if msg_type.0 == order_type {
-            result = format!("{} {}", msg_type.1, result);
+            let msg_type = tags::MSG_TYPES
+                .iter()
+                .find(|(msg_type, _)| *msg_type == field.value)
+                .expect("Invalid msg type")
+                .1;
+            result = format!("{} {}", msg_type, result);
         }
     }
     result
@@ -261,7 +260,7 @@ mod tests {
             value: true,
             only_fix: false,
         };
-        let result = format_to_string(parsed, &flags);
+        let result = format_to_string(&parsed, &flags);
         let expected = String::from(
             "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
         );

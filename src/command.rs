@@ -30,7 +30,7 @@ pub fn make_command() -> Command {
                 .default_missing_value("")
         )
         .arg(
-            arg!(-t --tag "Translate all numbers to tag names whether part of a message or not")
+            arg!(-t --tag "Translate tag numbers on non FIX message lines")
                 .action(ArgAction::SetTrue)
         )
         .arg(
