@@ -21,10 +21,12 @@ _prefix() {
 '--delimiter=[Set delimiter string to print after each FIX field]:delimiter: ' \
 '-S+[Summarise each fix message based on an optional template]' \
 '--summary=[Summarise each fix message based on an optional template]' \
+'-o[Only print FIX messages]' \
+'--only-fix[Only print FIX messages]' \
 '-s[Strip the whitespace around the = in each field]' \
 '--strip[Strip the whitespace around the = in each field]' \
-'-t[Translate all numbers to tag names whether part of a message or not]' \
-'--tag[Translate all numbers to tag names whether part of a message or not]' \
+'-t[Translate tag numbers on non FIX message lines]' \
+'--tag[Translate tag numbers on non FIX message lines]' \
 '-v[Translate the values of some tags (for Side\: 1 -> Buy)]' \
 '--value[Translate the values of some tags (for Side\: 1 -> Buy)]' \
 '-h[Print help]' \
