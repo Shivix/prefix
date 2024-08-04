@@ -6,8 +6,7 @@ arg_sets=(
     "--summary --tag"
     "--summary=55"
     "--summary=54 --value"
-    # Add --only-fix when released
-    #"--summary" "54 some 55" "--only-fix"
+    "--summary" "54 some 55" "--only-fix"
     "--tag"
     "--value"
     "--strip"

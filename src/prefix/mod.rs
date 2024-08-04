@@ -42,7 +42,7 @@ fn get_tag_regex() -> Regex {
     Regex::new(r"[0-9]+").unwrap()
 }
 
-pub fn run(input: &Vec<String>, flags: Options) {
+pub fn run(input: &[String], flags: Options) {
     let fix_msg_regex = get_msg_regex();
     let fix_tag_regex = get_tag_regex();
 
@@ -105,7 +105,7 @@ fn add_colour(input: &str, use_colour: bool) -> String {
     }
 }
 
-fn format_to_string(input: &Vec<Field>, flags: &Options) -> String {
+fn format_to_string(input: &[Field], flags: &Options) -> String {
     input.iter().fold(String::new(), |result, field| {
         // Allow custom tags to still be printed without translation
         let tag = if field.tag >= tags::TAGS.len() {
@@ -124,11 +124,11 @@ fn format_to_string(input: &Vec<Field>, flags: &Options) -> String {
     })
 }
 
-fn format_to_summary(input: &Vec<Field>, template: &str, value_flag: bool) -> String {
+fn format_to_summary(input: &[Field], template: &str, value_flag: bool) -> String {
     let mut result = String::from(template);
     for field in input {
         let value = if value_flag {
-            translate_value(&field)
+            translate_value(field)
         } else {
             &field.value
         };
