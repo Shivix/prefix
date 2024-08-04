@@ -46,12 +46,17 @@ pub fn run(input: &Vec<String>, flags: Options) {
     let fix_msg_regex = get_msg_regex();
     let fix_tag_regex = get_tag_regex();
 
-    for line in input {
+    for (i, line) in input.iter().enumerate() {
         if let Some(parsed) = parse_fix_msg(line, &fix_msg_regex) {
             if let Some(ref template) = flags.summary {
                 println!("{}", format_to_summary(&parsed, template, flags.value));
             } else {
-                println!("{}", format_to_string(&parsed, &flags));
+                // Avoid adding an empty new line at the bottom of the output.
+                if i == input.len() - 1 && flags.delimiter == "\n" {
+                    print!("{}", format_to_string(&parsed, &flags));
+                } else {
+                    println!("{}", format_to_string(&parsed, &flags));
+                }
             };
         } else if !flags.only_fix {
             if flags.tag {
