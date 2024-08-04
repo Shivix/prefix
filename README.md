@@ -6,7 +6,7 @@ A commandline based pretty printer for FIX messages.
 
 Based on a FIX4.4 dictionary, but is usable with all versions.
 
-<img alt="Prefix showcase" src="https://github.com/Shivix/prefix/tree/master/examples/prefix.gif" width="1200" />
+<img alt="Prefix showcase" src="https://github.com/Shivix/prefix/blob/master/examples/prefix.gif" width="1200" />
 
 ## Usage
 input can be passed in as an argument or piped in:
