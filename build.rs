@@ -7,7 +7,8 @@ include!("src/command.rs");
 
 fn main() -> Result<(), Error> {
     let mut cmd = make_command();
-    let out_dir = std::path::PathBuf::from(std::env::var_os("OUT_DIR").ok_or(std::io::ErrorKind::NotFound)?);
+    let out_dir =
+        std::path::PathBuf::from(std::env::var_os("OUT_DIR").ok_or(std::io::ErrorKind::NotFound)?);
 
     for shell in [Bash, Fish, PowerShell, Zsh] {
         let completion_path = clap_complete::generate_to(shell, &mut cmd, "prefix", &out_dir)?;
