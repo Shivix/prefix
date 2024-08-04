@@ -43,10 +43,10 @@ for args in "${arg_sets[@]}"; do
         $before_cmd $msg $args >>"$before_file"
         $after_cmd $msg $args >>"$after_file"
     done
-    cat test.txt | $before_cmd $args >>"$before_file"
-    cat test.txt | $after_cmd $args >>"$after_file"
+    cat test/test.txt | $before_cmd $args >>"$before_file"
+    cat test/test.txt | $after_cmd $args >>"$after_file"
 done
-cat test.txt | $before_cmd --summary 55 | sort | uniq --count >>"$before_file"
-cat test.txt | $after_cmd --summary 55 | sort | uniq --count >>"$after_file"
+cat test/test.txt | $before_cmd --summary 55 | sort | uniq --count >>"$before_file"
+cat test/test.txt | $after_cmd --summary 55 | sort | uniq --count >>"$after_file"
 
 $diff_tool "$before_file" "$after_file"
