@@ -99,6 +99,7 @@ fn parse_tags(input: &str, regex: &Regex) -> String {
 
 fn add_colour(input: &str, use_colour: bool) -> String {
     if use_colour {
+        // TODO: Allow configuring colour using ENV variable
         format!("\x1b[33m{}\x1b[0m", input)
     } else {
         input.to_string()
