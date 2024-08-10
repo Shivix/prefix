@@ -149,69 +149,10 @@ fn format_to_summary(input: &[Field], template: &str, value_flag: bool) -> Strin
     result
 }
 
-// Not ideal but leaves it simple and easy for anyone to add values. This function is opt in.
 fn translate_value(field: &Field) -> &str {
-    match field.tag {
-        // OrdType
-        40 => match field.value.as_str() {
-            "1" => "Market",
-            "2" => "Limit",
-            "3" => "Stop",
-            // Keep as one word for better usage with awk
-            "4" => "StopLimit",
-            "D" => "PreviouslyQuoted",
-            _ => &field.value,
-        },
-        // Side
-        54 => match field.value.as_str() {
-            "1" => "Buy",
-            "2" => "Sell",
-            _ => &field.value,
-        },
-        // TimeInForce
-        59 => match field.value.as_str() {
-            "0" => "Day",
-            "1" => "GTC",
-            "2" => "OPG",
-            "3" => "IOC",
-            "4" => "FOK",
-            "5" => "GTX",
-            "6" => "GTD",
-            _ => &field.value,
-        },
-        // ExecType
-        150 => match field.value.as_str() {
-            "0" => "New",
-            "1" => "PartialFill",
-            "2" => "Fill",
-            "4" => "Canceled",
-            "8" => "Rejected",
-            "F" => "Trade",
-            _ => &field.value,
-        },
-        // SubscriptionRequestType
-        263 => match field.value.as_str() {
-            "0" => "Snapshot",
-            "1" => "Subscribe",
-            "2" => "Unsubscribe",
-            _ => &field.value,
-        },
-        // MDEntryType
-        269 => match field.value.as_str() {
-            "0" => "Bid",
-            "1" => "Offer",
-            "2" => "Trade",
-            _ => &field.value,
-        },
-        // MDUpdateAction
-        279 => match field.value.as_str() {
-            "0" => "New",
-            "1" => "Change",
-            "2" => "Delete",
-            _ => &field.value,
-        },
-        _ => &field.value,
-    }
+    tags::VALUES
+        .get(format!("{}-{}", field.tag, field.value).as_str())
+        .unwrap_or(&field.value.as_str())
 }
 
 #[cfg(test)]

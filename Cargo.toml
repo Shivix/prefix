@@ -27,6 +27,7 @@ categories = [
 [dependencies]
 regex = "1.10.5"
 clap = "4.5.9"
+phf = { version = "0.11.2", features = ["macros"] }
 
 [build-dependencies]
 clap = "4.5.9"
