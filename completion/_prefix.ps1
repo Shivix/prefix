@@ -29,6 +29,8 @@ Register-ArgumentCompleter -Native -CommandName 'prefix' -ScriptBlock {
             [CompletionResult]::new('--summary', 'summary', [CompletionResultType]::ParameterName, 'Summarise each fix message based on an optional template')
             [CompletionResult]::new('-o', 'o', [CompletionResultType]::ParameterName, 'Only print FIX messages')
             [CompletionResult]::new('--only-fix', 'only-fix', [CompletionResultType]::ParameterName, 'Only print FIX messages')
+            [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'Only consider full FIX messages containing both BeginString and Checksum')
+            [CompletionResult]::new('--strict', 'strict', [CompletionResultType]::ParameterName, 'Only consider full FIX messages containing both BeginString and Checksum')
             [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')
             [CompletionResult]::new('--strip', 'strip', [CompletionResultType]::ParameterName, 'Strip the whitespace around the = in each field')
             [CompletionResult]::new('-t', 't', [CompletionResultType]::ParameterName, 'Translate tag numbers on non FIX message lines')
