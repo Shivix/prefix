@@ -9,6 +9,8 @@ arg_sets=(
     "--summary" "54 some 55" "--only-fix"
     "--tag"
     "--value"
+    "--strict"
+    "--strict --only-fix"
     "--strip"
     "--delimiter=|"
     "--strip --delimiter=| --value --color=never"
@@ -17,7 +19,7 @@ arg_sets=(
 msg_sets=(
     "8=FIX.4.4|35=A|34=1092|49=TESTBUY1|56=TESTSELL1|10=178|"
     "8=FIX.4.4^35=D^34=192^49=SENDER^56=TARGET^55=EURUSD^10=123^"
-    "8=FIX.4.4|35=8|34=192|49=SENDER|56=TARGET|55=EURUSD|54=1|10=123|"
+    "8=FIX.4.4|35=8|34=192|49=SENDER|56=TARGET|55=EURUSD|54=1"
     "8=FIX.4.4|35=8|34=192|49=SENDER|56=TARGET|55=EURUSD|54=1|17=12345678910|10=123|"
 )
 
