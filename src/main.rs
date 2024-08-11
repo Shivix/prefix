@@ -12,5 +12,5 @@ fn main() {
     };
 
     let flags = prefix::matches_to_flags(&matches);
-    prefix::run(&fix_message, flags);
+    prefix::run(&fix_message, &flags);
 }
