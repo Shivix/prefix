@@ -26,6 +26,10 @@ pub fn make_command() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
+            arg!(-r --repeating "Combine any repeating groups into a single field with a comma delimited value")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
             arg!(-s --strip "Strip the whitespace around the = in each field")
                 .action(ArgAction::SetTrue)
         )

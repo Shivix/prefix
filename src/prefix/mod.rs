@@ -4,7 +4,7 @@ use clap::ArgMatches;
 use regex::Regex;
 use std::io::{self, IsTerminal};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Field {
     tag: usize,
     value: String,
@@ -13,6 +13,7 @@ struct Field {
 pub struct Options {
     delimiter: String,
     colour: bool,
+    repeating: bool,
     strict: bool,
     strip: bool,
     summary: Option<String>,
@@ -34,6 +35,7 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     Options {
         delimiter: matches.get_one::<String>("delimiter").unwrap().to_string(),
         colour: use_colour,
+        repeating: matches.get_flag("repeating"),
         strict: matches.get_flag("strict"),
         strip: matches.get_flag("strip"),
         summary: matches.get_one::<String>("summary").cloned(),
@@ -85,8 +87,8 @@ fn print_non_fix_msg(line: &str, fix_tag_regex: &Regex, flags: &Options) {
 }
 
 fn print_fix_msg(line_number: usize, last_line: usize, fix_msg: &[Field], flags: &Options) {
-    if let Some(ref template) = flags.summary {
-        println!("{}", format_to_summary(fix_msg, template, flags.value));
+    if flags.summary.is_some() {
+        println!("{}", format_to_summary(fix_msg, flags));
     } else {
         // Avoid adding an empty new line at the bottom of the output.
         if line_number + 1 == last_line && flags.delimiter == "\n" {
@@ -110,7 +112,9 @@ fn parse_fix_msg(input: &str, regex: &Regex) -> FixMsg {
 
     let mut result = Vec::new();
     for i in regex.captures_iter(input) {
-        let tag = i["tag"].parse().expect("found non numerical tag");
+        let tag = i["tag"]
+            .parse()
+            .unwrap_or_else(|_| panic!("could not parse tag: {}", &i["tag"]));
         if tag == 8 {
             contains_begin_string = true;
         } else if tag == 10 {
@@ -146,7 +150,12 @@ fn add_colour(input: &str, use_colour: bool) -> String {
 }
 
 fn format_to_string(input: &[Field], flags: &Options) -> String {
-    input.iter().fold(String::new(), |result, field| {
+    let fix_msg = if flags.repeating {
+        &combine_repeating_groups(input)
+    } else {
+        input
+    };
+    fix_msg.iter().fold(String::new(), |result, field| {
         // Allow custom tags to still be printed without translation
         let tag = if field.tag >= tags::TAGS.len() {
             &field.tag.to_string()
@@ -155,7 +164,11 @@ fn format_to_string(input: &[Field], flags: &Options) -> String {
         };
         let separator = add_colour(if flags.strip { "=" } else { " = " }, flags.colour);
         let value = if flags.value {
-            translate_value(field)
+            if flags.repeating {
+                &translate_combined_values(field)
+            } else {
+                translate_value(field)
+            }
         } else {
             &field.value
         };
@@ -164,11 +177,16 @@ fn format_to_string(input: &[Field], flags: &Options) -> String {
     })
 }
 
-fn format_to_summary(input: &[Field], template: &str, value_flag: bool) -> String {
+fn format_to_summary(input: &[Field], flags: &Options) -> String {
+    let template = flags.summary.as_ref().unwrap();
     let mut result = String::from(template);
     for field in input {
-        let value = if value_flag {
-            translate_value(field)
+        let value = if flags.value {
+            if flags.repeating {
+                &translate_combined_values(field)
+            } else {
+                translate_value(field)
+            }
         } else {
             &field.value
         };
@@ -192,6 +210,33 @@ fn translate_value(field: &Field) -> &str {
     tags::VALUES
         .get(format!("{}-{}", field.tag, field.value).as_str())
         .unwrap_or(&field.value.as_str())
+}
+
+fn translate_combined_values(field: &Field) -> String {
+    let mut values = String::new();
+    for value in field.value.split(',') {
+        if !values.is_empty() {
+            values.push(',')
+        }
+        values.push_str(
+            tags::VALUES
+                .get(format!("{}-{}", field.tag, value).as_str())
+                .unwrap_or(&value),
+        );
+    }
+    values
+}
+
+fn combine_repeating_groups(input: &[Field]) -> Vec<Field> {
+    let mut result = Vec::<Field>::new();
+    for field in input {
+        if let Some(existing_field) = result.iter_mut().find(|f| f.tag == field.tag) {
+            existing_field.value.push_str(&format!(",{}", field.value));
+        } else {
+            result.push(field.clone());
+        }
+    }
+    result
 }
 
 #[cfg(test)]
@@ -245,19 +290,70 @@ mod tests {
             panic!("Should be a partial FIX message");
         };
         let flags = Options {
-            delimiter: String::from("|"),
+            delimiter: String::from("\n"),
             colour: false,
+            repeating: false,
             strict: false,
             strip: false,
             summary: None,
             tag: false,
-            value: true,
+            value: false,
             only_fix: false,
         };
         let result = format_to_string(&parsed, &flags);
         let expected = String::from(
-            "BeginString = FIX.4.4|Account = test|Symbol = ETH/USD|Side = Buy|29999 = 50|",
+            "BeginString = FIX.4.4\nAccount = test\nSymbol = ETH/USD\nSide = 1\n29999 = 50\n",
         );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn format_args_case() {
+        let input = "8=FIX.4.4|1=test|55=ETH/USD|54=1|29999=50";
+        let FixMsg::Partial(parsed) = parse_fix_msg(input, &get_msg_regex()) else {
+            panic!("Should be a partial FIX message");
+        };
+        let flags = Options {
+            delimiter: String::from("|"),
+            colour: true,
+            repeating: true,
+            strict: true,
+            strip: true,
+            summary: None,
+            tag: true,
+            value: true,
+            only_fix: true,
+        };
+        let result = format_to_string(&parsed, &flags);
+        let expected = String::from(
+            "BeginString=FIX.4.4|Account=test|Symbol=ETH/USD|Side=Buy|29999=50|"
+                .replace("|", "\x1b[33m|\x1b[0m")
+                .replace("=", "\x1b[33m=\x1b[0m"),
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn summary_case() {
+        let input = [
+            field!(8, "4.4"),
+            field!(35, "D"),
+            field!(55, "EUR/USD"),
+            field!(10, "123"),
+        ];
+        let flags = Options {
+            delimiter: String::from("\n"),
+            colour: false,
+            repeating: false,
+            strict: false,
+            strip: false,
+            summary: Some(String::from("for 55")),
+            tag: false,
+            value: false,
+            only_fix: false,
+        };
+        let result = format_to_summary(&input, &flags);
+        let expected = String::from("NewOrderSingle for EUR/USD");
         assert_eq!(result, expected);
     }
 
@@ -269,5 +365,31 @@ mod tests {
         let input = "54,11,8";
         let parsed = parse_tags(input, &get_tag_regex());
         assert_eq!(parsed, "Side,ClOrdID,BeginString");
+    }
+
+    #[test]
+    fn repeating_case() {
+        let input = [
+            field!(8, "4.4"),
+            field!(55, "EUR/USD"),
+            field!(268, "3"),
+            field!(270, "1.1"),
+            field!(270, "1.2"),
+            field!(270, "1.3"),
+            field!(271, "1000"),
+            field!(271, "2500"),
+            field!(271, "5000"),
+            field!(10, "123"),
+        ];
+        let result = combine_repeating_groups(&input);
+        let expected = [
+            field!(8, "4.4"),
+            field!(55, "EUR/USD"),
+            field!(268, "3"),
+            field!(270, "1.1,1.2,1.3"),
+            field!(271, "1000,2500,5000"),
+            field!(10, "123"),
+        ];
+        assert_eq!(result, expected);
     }
 }
