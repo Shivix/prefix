@@ -3,6 +3,7 @@ complete -c prefix -s d -l delimiter -d 'Set delimiter string to print after eac
 complete -c prefix -s S -l summary -d 'Summarise each fix message based on an optional template' -r
 complete -c prefix -s o -l only-fix -d 'Only print FIX messages'
 complete -c prefix -s f -l strict -d 'Only consider full FIX messages containing both BeginString and Checksum'
+complete -c prefix -s r -l repeating -d 'Combine any repeating groups into a single field with a comma delimited value'
 complete -c prefix -s s -l strip -d 'Strip the whitespace around the = in each field'
 complete -c prefix -s t -l tag -d 'Translate tag numbers on non FIX message lines'
 complete -c prefix -s v -l value -d 'Translate the values of some tags (for Side: 1 -> Buy)'

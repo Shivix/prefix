@@ -25,6 +25,8 @@ _prefix() {
 '--only-fix[Only print FIX messages]' \
 '-f[Only consider full FIX messages containing both BeginString and Checksum]' \
 '--strict[Only consider full FIX messages containing both BeginString and Checksum]' \
+'-r[Combine any repeating groups into a single field with a comma delimited value]' \
+'--repeating[Combine any repeating groups into a single field with a comma delimited value]' \
 '-s[Strip the whitespace around the = in each field]' \
 '--strip[Strip the whitespace around the = in each field]' \
 '-t[Translate tag numbers on non FIX message lines]' \
