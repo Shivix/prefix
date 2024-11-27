@@ -2,7 +2,7 @@ mod tags;
 
 use clap::ArgMatches;
 use regex::Regex;
-use std::io::{self, IsTerminal};
+use std::io::{self, IsTerminal, Write};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Field {
@@ -56,47 +56,65 @@ fn get_tag_regex() -> Regex {
 pub fn run(input: &[String], flags: &Options) {
     let fix_msg_regex = get_msg_regex();
     let fix_tag_regex = get_tag_regex();
+    let mut stdout = io::stdout();
 
     for (i, line) in input.iter().enumerate() {
         match parse_fix_msg(line, &fix_msg_regex) {
             FixMsg::Full(parsed) => {
-                print_fix_msg(i, input.len(), &parsed, flags);
+                print_fix_msg(&mut stdout, i, input.len(), &parsed, flags);
             }
             FixMsg::Partial(parsed) => {
                 if !flags.strict {
-                    print_fix_msg(i, input.len(), &parsed, flags);
+                    print_fix_msg(&mut stdout, i, input.len(), &parsed, flags);
                 } else if !flags.only_fix {
-                    print_non_fix_msg(line, &fix_tag_regex, flags);
+                    print_non_fix_msg(&mut stdout, line, &fix_tag_regex, flags);
                 }
             }
             FixMsg::None => {
                 if !flags.only_fix {
-                    print_non_fix_msg(line, &fix_tag_regex, flags);
+                    print_non_fix_msg(&mut stdout, line, &fix_tag_regex, flags);
                 }
             }
         }
     }
 }
 
-fn print_non_fix_msg(line: &str, fix_tag_regex: &Regex, flags: &Options) {
-    if flags.tag {
-        println!("{}", parse_tags(line, fix_tag_regex));
-    } else {
-        println!("{}", line);
+fn ignore_broken_pipe(result: io::Result<()>) {
+    if let Err(e) = result {
+        // When piping into certain programs like head, printing to stdout can fail.
+        if e.kind() != io::ErrorKind::BrokenPipe {
+            panic!("Error writing to stdout: {}", e);
+        }
     }
 }
 
-fn print_fix_msg(line_number: usize, last_line: usize, fix_msg: &[Field], flags: &Options) {
-    if flags.summary.is_some() {
-        println!("{}", format_to_summary(fix_msg, flags));
+fn print_non_fix_msg(stdout: &mut io::Stdout, line: &str, fix_tag_regex: &Regex, flags: &Options) {
+    let result = if flags.tag {
+        writeln!(stdout, "{}", parse_tags(line, fix_tag_regex))
+    } else {
+        writeln!(stdout, "{}", line)
+    };
+    ignore_broken_pipe(result);
+}
+
+fn print_fix_msg(
+    stdout: &mut io::Stdout,
+    line_number: usize,
+    last_line: usize,
+    fix_msg: &[Field],
+    flags: &Options,
+) {
+    let result = if flags.summary.is_some() {
+        writeln!(stdout, "{}", format_to_summary(fix_msg, flags))
     } else {
         // Avoid adding an empty new line at the bottom of the output.
         if line_number + 1 == last_line && flags.delimiter == "\n" {
-            print!("{}", format_to_string(fix_msg, flags));
+            write!(stdout, "{}", format_to_string(fix_msg, flags))
         } else {
-            println!("{}", format_to_string(fix_msg, flags));
+            writeln!(stdout, "{}", format_to_string(fix_msg, flags))
         }
     };
+    ignore_broken_pipe(result);
 }
 
 fn parse_fix_msg(input: &str, regex: &Regex) -> FixMsg {
