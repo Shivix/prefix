@@ -13,13 +13,13 @@ struct Field {
 pub struct Options {
     delimiter: String,
     colour: bool,
+    only_fix: bool,
     repeating: bool,
     strict: bool,
     strip: bool,
     summary: Option<String>,
     tag: bool,
     value: bool,
-    only_fix: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -35,17 +35,19 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     Options {
         delimiter: matches.get_one::<String>("delimiter").unwrap().to_string(),
         colour: use_colour,
+        only_fix: matches.get_flag("only-fix"),
         repeating: matches.get_flag("repeating"),
         strict: matches.get_flag("strict"),
         strip: matches.get_flag("strip"),
         summary: matches.get_one::<String>("summary").cloned(),
         tag: matches.get_flag("tag"),
         value: matches.get_flag("value"),
-        only_fix: matches.get_flag("only-fix"),
     }
 }
 
 fn get_msg_regex() -> Regex {
+    // This regex will only match valid fields and any malformed fields will be ignored.
+    // This means its very unlikely for prefix to fail to parse a FIX message.
     Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").unwrap()
 }
 
@@ -58,14 +60,24 @@ pub fn run(input: &[String], flags: &Options) {
     let fix_tag_regex = get_tag_regex();
     let mut stdout = io::stdout();
 
+    let mut regex_by_tag = HashMap::<&str, Regex>::new();
+    if flags.summary.is_some() {
+        let template = flags.summary.as_ref().unwrap();
+        let re = Regex::new(r"\d+").unwrap();
+        for number in re.find_iter(template) {
+            let number = number.as_str();
+            regex_by_tag.insert(number, Regex::new(&format!(r"\b{}\b", number)).unwrap());
+        }
+    }
+
     for (i, line) in input.iter().enumerate() {
         match parse_fix_msg(line, &fix_msg_regex) {
             FixMsg::Full(parsed) => {
-                print_fix_msg(&mut stdout, i, input.len(), &parsed, flags);
+                print_fix_msg(&mut stdout, i, input.len(), &parsed, &regex_by_tag, flags);
             }
             FixMsg::Partial(parsed) => {
                 if !flags.strict {
-                    print_fix_msg(&mut stdout, i, input.len(), &parsed, flags);
+                    print_fix_msg(&mut stdout, i, input.len(), &parsed, &regex_by_tag, flags);
                 } else if !flags.only_fix {
                     print_non_fix_msg(&mut stdout, line, &fix_tag_regex, flags);
                 }
@@ -102,10 +114,11 @@ fn print_fix_msg(
     line_number: usize,
     last_line: usize,
     fix_msg: &[Field],
+    regex_by_tag: &HashMap<&str, Regex>,
     flags: &Options,
 ) {
     let result = if flags.summary.is_some() {
-        writeln!(stdout, "{}", format_to_summary(fix_msg, flags))
+        writeln!(stdout, "{}", format_to_summary(fix_msg, regex_by_tag, flags))
     } else {
         // Avoid adding an empty new line at the bottom of the output.
         if line_number + 1 == last_line && flags.delimiter == "\n" {
@@ -195,7 +208,7 @@ fn format_to_string(input: &[Field], flags: &Options) -> String {
     })
 }
 
-fn format_to_summary(input: &[Field], flags: &Options) -> String {
+fn format_to_summary(input: &[Field], regex_by_tag: &HashMap::<&str, Regex>, flags: &Options) -> String {
     let template = flags.summary.as_ref().unwrap();
     let mut result = String::from(template);
     for field in input {
@@ -209,8 +222,12 @@ fn format_to_summary(input: &[Field], flags: &Options) -> String {
             &field.value
         };
         if !template.is_empty() {
-            // Replace tag numbers in template to tag name.
-            result = result.replace(&field.tag.to_string(), value);
+            let tag = field.tag.to_string();
+            if template.contains(&tag) {
+                // Use a regex with line boundaries to ensure we don't overwrite partial numbers.
+                // Replace tag numbers in template to tag name.
+                result = regex_by_tag[tag.as_str()].replace_all(&result, value).to_string();
+            }
         }
         if field.tag == 35 {
             let msg_type = tags::MSG_TYPES
@@ -310,13 +327,13 @@ mod tests {
         let flags = Options {
             delimiter: String::from("\n"),
             colour: false,
+            only_fix: false,
             repeating: false,
             strict: false,
             strip: false,
             summary: None,
             tag: false,
             value: false,
-            only_fix: false,
         };
         let result = format_to_string(&parsed, &flags);
         let expected = String::from(
@@ -334,13 +351,13 @@ mod tests {
         let flags = Options {
             delimiter: String::from("|"),
             colour: true,
+            only_fix: true,
             repeating: true,
             strict: true,
             strip: true,
             summary: None,
             tag: true,
             value: true,
-            only_fix: true,
         };
         let result = format_to_string(&parsed, &flags);
         let expected = String::from(
@@ -362,15 +379,17 @@ mod tests {
         let flags = Options {
             delimiter: String::from("\n"),
             colour: false,
+            only_fix: false,
             repeating: false,
             strict: false,
             strip: false,
             summary: Some(String::from("for 55")),
             tag: false,
             value: false,
-            only_fix: false,
         };
-        let result = format_to_summary(&input, &flags);
+
+        let regex_by_tag = HashMap::<&str, Regex>::from([("55", Regex::new(r"\b55\b").unwrap())]);
+        let result = format_to_summary(&input, &regex_by_tag, &flags);
         let expected = String::from("NewOrderSingle for EUR/USD");
         assert_eq!(result, expected);
     }
