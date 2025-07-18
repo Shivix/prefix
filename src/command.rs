@@ -22,11 +22,11 @@ pub fn make_command() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            arg!(-f --strict "Only consider full FIX messages containing both BeginString and Checksum")
+            arg!(-r --repeating "Combine any repeating groups into a single field with a comma delimited value")
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            arg!(-r --repeating "Combine any repeating groups into a single field with a comma delimited value")
+            arg!(-f --strict "Only consider full FIX messages containing both BeginString and Checksum")
                 .action(ArgAction::SetTrue)
         )
         .arg(
