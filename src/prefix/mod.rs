@@ -34,13 +34,22 @@ enum FixMsg {
 pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     let when = matches.get_one::<String>("color").unwrap();
     let use_colour = (io::stdout().is_terminal() && when == "auto") || when == "always";
+    let delimiter;
+    let strip;
+    if matches.get_flag("porcelain") {
+        delimiter = String::from("\x01");
+        strip = true;
+    } else {
+        delimiter = matches.get_one::<String>("delimiter").unwrap().to_string();
+        strip = matches.get_flag("strip");
+    }
     Options {
-        delimiter: matches.get_one::<String>("delimiter").unwrap().to_string(),
+        delimiter,
         colour: use_colour,
         only_fix: matches.get_flag("only-fix"),
         repeating: matches.get_flag("repeating"),
         strict: matches.get_flag("strict"),
-        strip: matches.get_flag("strip"),
+        strip,
         summary: matches.get_one::<String>("summary").cloned(),
         tag: matches.get_flag("tag"),
         value: matches.get_flag("value"),
