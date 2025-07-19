@@ -3,7 +3,9 @@ mod tags;
 use clap::ArgMatches;
 use regex::Regex;
 use std::{
-    collections::HashMap, io::{self, IsTerminal, Write}, process
+    collections::HashMap,
+    io::{self, IsTerminal, Write},
+    process,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -66,21 +68,30 @@ pub fn get_tag_regex() -> Regex {
     Regex::new(r"[0-9]+").unwrap()
 }
 
-pub fn get_summary_regexes(flags: &Options) -> HashMap::<String, Regex> {
+pub fn get_summary_regexes(flags: &Options) -> HashMap<String, Regex> {
     let mut summary_regexes = HashMap::<String, Regex>::new();
     if flags.summary.is_some() {
         let template = flags.summary.as_ref().unwrap();
         let re = Regex::new(r"\d+").unwrap();
         for number in re.find_iter(template) {
             let number = number.as_str();
-            summary_regexes.insert(number.to_string(), Regex::new(&format!(r"\b{}\b", number)).unwrap());
+            summary_regexes.insert(
+                number.to_string(),
+                Regex::new(&format!(r"\b{}\b", number)).unwrap(),
+            );
         }
     }
     summary_regexes
 }
 
-
-pub fn run(input: &str, last_line: bool, msg_regex: &Regex, tag_regex: &Regex, summary_regexes: &HashMap::<String, Regex>, flags: &Options) {
+pub fn run(
+    input: &str,
+    last_line: bool,
+    msg_regex: &Regex,
+    tag_regex: &Regex,
+    summary_regexes: &HashMap<String, Regex>,
+    flags: &Options,
+) {
     let mut stdout = io::stdout();
 
     match parse_fix_msg(input, &msg_regex) {
@@ -132,7 +143,11 @@ fn print_fix_msg(
     flags: &Options,
 ) {
     let result = if flags.summary.is_some() {
-        writeln!(stdout, "{}", format_to_summary(fix_msg, regex_by_tag, flags))
+        writeln!(
+            stdout,
+            "{}",
+            format_to_summary(fix_msg, regex_by_tag, flags)
+        )
     } else {
         // Avoid adding an empty new line at the bottom of the output.
         if last_line && flags.delimiter == "\n" {
@@ -222,7 +237,11 @@ fn format_to_string(input: &[Field], flags: &Options) -> String {
     })
 }
 
-fn format_to_summary(input: &[Field], regex_by_tag: &HashMap::<String, Regex>, flags: &Options) -> String {
+fn format_to_summary(
+    input: &[Field],
+    regex_by_tag: &HashMap<String, Regex>,
+    flags: &Options,
+) -> String {
     let template = flags.summary.as_ref().unwrap();
     let mut result = String::from(template);
     for field in input {
@@ -240,7 +259,9 @@ fn format_to_summary(input: &[Field], regex_by_tag: &HashMap::<String, Regex>, f
             if template.contains(&tag) {
                 // Use a regex with line boundaries to ensure we don't overwrite partial numbers.
                 // Replace tag numbers in template to tag name.
-                result = regex_by_tag[tag.as_str()].replace_all(&result, value).to_string();
+                result = regex_by_tag[tag.as_str()]
+                    .replace_all(&result, value)
+                    .to_string();
             }
         }
         if field.tag == 35 {
@@ -402,7 +423,8 @@ mod tests {
             value: false,
         };
 
-        let regex_by_tag = HashMap::<String, Regex>::from([(String::from("55"), Regex::new(r"\b55\b").unwrap())]);
+        let regex_by_tag =
+            HashMap::<String, Regex>::from([(String::from("55"), Regex::new(r"\b55\b").unwrap())]);
         let result = format_to_summary(&input, &regex_by_tag, &flags);
         let expected = String::from("NewOrderSingle for EUR/USD");
         assert_eq!(result, expected);

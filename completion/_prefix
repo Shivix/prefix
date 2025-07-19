@@ -23,10 +23,11 @@ _prefix() {
 '--summary=[Summarise each fix message based on an optional template]' \
 '-o[Only print FIX messages]' \
 '--only-fix[Only print FIX messages]' \
-'-f[Only consider full FIX messages containing both BeginString and Checksum]' \
-'--strict[Only consider full FIX messages containing both BeginString and Checksum]' \
+'--porcelain[print FIX messages closer to standard format, same as --delimiter \\x01 --strip]' \
 '-r[Combine any repeating groups into a single field with a comma delimited value]' \
 '--repeating[Combine any repeating groups into a single field with a comma delimited value]' \
+'-f[Only consider full FIX messages containing both BeginString and Checksum]' \
+'--strict[Only consider full FIX messages containing both BeginString and Checksum]' \
 '-s[Strip the whitespace around the = in each field]' \
 '--strip[Strip the whitespace around the = in each field]' \
 '-t[Translate tag numbers on non FIX message lines]' \
