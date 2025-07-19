@@ -12,15 +12,12 @@ fn main() -> Result<(), Error> {
 
     for shell in [Bash, Fish, PowerShell, Zsh] {
         let completion_path = clap_complete::generate_to(shell, &mut cmd, "prefix", &out_dir)?;
-        println!(
-            "cargo:warning=completion file is generated: {:?}",
-            completion_path
-        );
+        println!("cargo:warning=completion file is generated: {completion_path:?}");
     }
 
     let man = clap_mangen::Man::new(cmd);
     let man_path = Man::generate_to(&man, out_dir)?;
-    println!("cargo:warning=man file is generated: {:?}", man_path);
+    println!("cargo:warning=man file is generated: {man_path:?}");
 
     Ok(())
 }
