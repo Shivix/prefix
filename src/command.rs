@@ -22,6 +22,10 @@ pub fn make_command() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
+            arg!(--porcelain "print FIX messages closer to standard format, same as --delimiter \\x01 --strip")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
             arg!(-r --repeating "Combine any repeating groups into a single field with a comma delimited value")
                 .action(ArgAction::SetTrue)
         )
