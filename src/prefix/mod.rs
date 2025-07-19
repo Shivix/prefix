@@ -77,7 +77,7 @@ pub fn get_summary_regexes(flags: &Options) -> HashMap<String, Regex> {
             let number = number.as_str();
             summary_regexes.insert(
                 number.to_string(),
-                Regex::new(&format!(r"\b{}\b", number)).unwrap(),
+                Regex::new(&format!(r"\b{number}\b")).unwrap(),
             );
         }
     }
@@ -94,35 +94,35 @@ pub fn run(
 ) {
     let mut stdout = io::stdout();
 
-    match parse_fix_msg(input, &msg_regex) {
+    match parse_fix_msg(input, msg_regex) {
         FixMsg::Full(parsed) => {
-            print_fix_msg(&mut stdout, last_line, &parsed, &summary_regexes, flags);
+            print_fix_msg(&mut stdout, last_line, &parsed, summary_regexes, flags);
         }
         FixMsg::Partial(parsed) => {
             if !flags.strict {
-                print_fix_msg(&mut stdout, last_line, &parsed, &summary_regexes, flags);
+                print_fix_msg(&mut stdout, last_line, &parsed, summary_regexes, flags);
             } else if !flags.only_fix {
-                print_non_fix_msg(&mut stdout, input, &tag_regex, flags);
+                print_non_fix_msg(&mut stdout, input, tag_regex, flags);
             }
         }
         FixMsg::None => {
             if !flags.only_fix {
-                print_non_fix_msg(&mut stdout, input, &tag_regex, flags);
+                print_non_fix_msg(&mut stdout, input, tag_regex, flags);
             }
         }
     }
 }
 
 fn handle_broken_pipe(result: io::Result<()>) {
-    if let Err(e) = result {
+    if let Err(error) = result {
         // When piping into certain programs like head, printing to stdout can fail. This is
         // expected and we do not want to panic, instead we terminate cleanly. Prefix is not
         // designed to be used for anything besides printing. And this keeps the behaviour closer
         // to other unix tools that will terminate upon receiving the SIGPIPE (which rust programs ignore by default)
-        if e.kind() == io::ErrorKind::BrokenPipe {
+        if error.kind() == io::ErrorKind::BrokenPipe {
             process::exit(0);
         }
-        panic!("Error writing to stdout: {}", e);
+        panic!("Error writing to stdout: {error}");
     }
 }
 
@@ -130,7 +130,7 @@ fn print_non_fix_msg(stdout: &mut io::Stdout, line: &str, tag_regex: &Regex, fla
     let result = if flags.tag {
         writeln!(stdout, "{}", parse_tags(line, tag_regex))
     } else {
-        writeln!(stdout, "{}", line)
+        writeln!(stdout, "{line}")
     };
     handle_broken_pipe(result);
 }
@@ -203,7 +203,7 @@ fn parse_tags(input: &str, regex: &Regex) -> String {
 fn add_colour(input: &str, use_colour: bool) -> String {
     if use_colour {
         // TODO: Allow configuring colour using ENV variable
-        format!("\x1b[33m{}\x1b[0m", input)
+        format!("\x1b[33m{input}\x1b[0m")
     } else {
         input.to_string()
     }
@@ -270,7 +270,7 @@ fn format_to_summary(
                 .find(|(msg_type, _)| *msg_type == field.value)
                 .expect("Invalid msg type")
                 .1;
-            result = format!("{} {}", msg_type, result);
+            result = format!("{msg_type} {result}");
         }
     }
     result
