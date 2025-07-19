@@ -2,7 +2,9 @@ mod tags;
 
 use clap::ArgMatches;
 use regex::Regex;
-use std::io::{self, IsTerminal, Write};
+use std::{
+    collections::HashMap, io::{self, IsTerminal, Write}, process
+};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Field {
@@ -45,89 +47,92 @@ pub fn matches_to_flags(matches: &ArgMatches) -> Options {
     }
 }
 
-fn get_msg_regex() -> Regex {
+pub fn get_msg_regex() -> Regex {
     // This regex will only match valid fields and any malformed fields will be ignored.
     // This means its very unlikely for prefix to fail to parse a FIX message.
     Regex::new(r"(?P<tag>[0-9]+)=(?P<value>[^\^\|\x01]+)").unwrap()
 }
 
-fn get_tag_regex() -> Regex {
+pub fn get_tag_regex() -> Regex {
     Regex::new(r"[0-9]+").unwrap()
 }
 
-pub fn run(input: &[String], flags: &Options) {
-    let fix_msg_regex = get_msg_regex();
-    let fix_tag_regex = get_tag_regex();
-    let mut stdout = io::stdout();
-
-    let mut regex_by_tag = HashMap::<&str, Regex>::new();
+pub fn get_summary_regexes(flags: &Options) -> HashMap::<String, Regex> {
+    let mut summary_regexes = HashMap::<String, Regex>::new();
     if flags.summary.is_some() {
         let template = flags.summary.as_ref().unwrap();
         let re = Regex::new(r"\d+").unwrap();
         for number in re.find_iter(template) {
             let number = number.as_str();
-            regex_by_tag.insert(number, Regex::new(&format!(r"\b{}\b", number)).unwrap());
+            summary_regexes.insert(number.to_string(), Regex::new(&format!(r"\b{}\b", number)).unwrap());
         }
     }
+    summary_regexes
+}
 
-    for (i, line) in input.iter().enumerate() {
-        match parse_fix_msg(line, &fix_msg_regex) {
-            FixMsg::Full(parsed) => {
-                print_fix_msg(&mut stdout, i, input.len(), &parsed, &regex_by_tag, flags);
+
+pub fn run(input: &str, last_line: bool, msg_regex: &Regex, tag_regex: &Regex, summary_regexes: &HashMap::<String, Regex>, flags: &Options) {
+    let mut stdout = io::stdout();
+
+    match parse_fix_msg(input, &msg_regex) {
+        FixMsg::Full(parsed) => {
+            print_fix_msg(&mut stdout, last_line, &parsed, &summary_regexes, flags);
+        }
+        FixMsg::Partial(parsed) => {
+            if !flags.strict {
+                print_fix_msg(&mut stdout, last_line, &parsed, &summary_regexes, flags);
+            } else if !flags.only_fix {
+                print_non_fix_msg(&mut stdout, input, &tag_regex, flags);
             }
-            FixMsg::Partial(parsed) => {
-                if !flags.strict {
-                    print_fix_msg(&mut stdout, i, input.len(), &parsed, &regex_by_tag, flags);
-                } else if !flags.only_fix {
-                    print_non_fix_msg(&mut stdout, line, &fix_tag_regex, flags);
-                }
-            }
-            FixMsg::None => {
-                if !flags.only_fix {
-                    print_non_fix_msg(&mut stdout, line, &fix_tag_regex, flags);
-                }
+        }
+        FixMsg::None => {
+            if !flags.only_fix {
+                print_non_fix_msg(&mut stdout, input, &tag_regex, flags);
             }
         }
     }
 }
 
-fn ignore_broken_pipe(result: io::Result<()>) {
+fn handle_broken_pipe(result: io::Result<()>) {
     if let Err(e) = result {
-        // When piping into certain programs like head, printing to stdout can fail.
-        if e.kind() != io::ErrorKind::BrokenPipe {
-            panic!("Error writing to stdout: {}", e);
+        // When piping into certain programs like head, printing to stdout can fail. This is
+        // expected and we do not want to panic, instead we terminate cleanly. Prefix is not
+        // designed to be used for anything besides printing. And this keeps the behaviour closer
+        // to other unix tools that will terminate upon receiving the SIGPIPE (which rust programs ignore by default)
+        if e.kind() == io::ErrorKind::BrokenPipe {
+            process::exit(0);
         }
+        panic!("Error writing to stdout: {}", e);
     }
 }
 
-fn print_non_fix_msg(stdout: &mut io::Stdout, line: &str, fix_tag_regex: &Regex, flags: &Options) {
+fn print_non_fix_msg(stdout: &mut io::Stdout, line: &str, tag_regex: &Regex, flags: &Options) {
     let result = if flags.tag {
-        writeln!(stdout, "{}", parse_tags(line, fix_tag_regex))
+        writeln!(stdout, "{}", parse_tags(line, tag_regex))
     } else {
         writeln!(stdout, "{}", line)
     };
-    ignore_broken_pipe(result);
+    handle_broken_pipe(result);
 }
 
 fn print_fix_msg(
     stdout: &mut io::Stdout,
-    line_number: usize,
-    last_line: usize,
+    last_line: bool,
     fix_msg: &[Field],
-    regex_by_tag: &HashMap<&str, Regex>,
+    regex_by_tag: &HashMap<String, Regex>,
     flags: &Options,
 ) {
     let result = if flags.summary.is_some() {
         writeln!(stdout, "{}", format_to_summary(fix_msg, regex_by_tag, flags))
     } else {
         // Avoid adding an empty new line at the bottom of the output.
-        if line_number + 1 == last_line && flags.delimiter == "\n" {
+        if last_line && flags.delimiter == "\n" {
             write!(stdout, "{}", format_to_string(fix_msg, flags))
         } else {
             writeln!(stdout, "{}", format_to_string(fix_msg, flags))
         }
     };
-    ignore_broken_pipe(result);
+    handle_broken_pipe(result);
 }
 
 fn parse_fix_msg(input: &str, regex: &Regex) -> FixMsg {
@@ -208,7 +213,7 @@ fn format_to_string(input: &[Field], flags: &Options) -> String {
     })
 }
 
-fn format_to_summary(input: &[Field], regex_by_tag: &HashMap::<&str, Regex>, flags: &Options) -> String {
+fn format_to_summary(input: &[Field], regex_by_tag: &HashMap::<String, Regex>, flags: &Options) -> String {
     let template = flags.summary.as_ref().unwrap();
     let mut result = String::from(template);
     for field in input {
@@ -388,7 +393,7 @@ mod tests {
             value: false,
         };
 
-        let regex_by_tag = HashMap::<&str, Regex>::from([("55", Regex::new(r"\b55\b").unwrap())]);
+        let regex_by_tag = HashMap::<String, Regex>::from([(String::from("55"), Regex::new(r"\b55\b").unwrap())]);
         let result = format_to_summary(&input, &regex_by_tag, &flags);
         let expected = String::from("NewOrderSingle for EUR/USD");
         assert_eq!(result, expected);
