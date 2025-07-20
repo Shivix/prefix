@@ -39,7 +39,7 @@ pub fn make_command() -> Command {
         )
         .arg(
             arg!(-S --summary [template] "Summarise each fix message based on an optional template")
-                .default_missing_value("")
+                .default_missing_value("35")
         )
         .arg(
             arg!(-t --tag "Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it's number")

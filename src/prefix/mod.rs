@@ -271,14 +271,6 @@ fn format_to_summary(
                     .to_string();
             }
         }
-        if field.tag == 35 {
-            let msg_type = tags::MSG_TYPES
-                .iter()
-                .find(|(msg_type, _)| *msg_type == field.value)
-                .expect("Invalid msg type")
-                .1;
-            result = format!("{msg_type} {result}");
-        }
     }
     result
 }

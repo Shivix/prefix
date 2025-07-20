@@ -4,11 +4,13 @@ diff_tool="nvim -d "
 
 arg_sets=(
     "--summary --tag"
-    "--summary=55"
+    "--summary" "35 55"
     "--summary=54 --value"
-    "--summary" "54 some 55" "--only-fix"
+    "--summary" "35 54 some 55" "--only-fix"
     "--tag"
     "--value"
+    "--value --repeating"
+    "--repeating"
     "--strict"
     "--strict --only-fix"
     "--strip"
@@ -17,6 +19,8 @@ arg_sets=(
 )
 
 msg_sets=(
+    "Non FIX line with a tag: 55"
+    "BeginString"
     "8=FIX.4.4|35=A|34=1092|49=TESTBUY1|56=TESTSELL1|10=178|"
     "8=FIX.4.4^35=D^34=192^49=SENDER^56=TARGET^55=EURUSD^10=123^"
     "8=FIX.4.4|35=8|34=192|49=SENDER|56=TARGET|55=EURUSD|54=1"
@@ -40,16 +44,16 @@ trap cleanup EXIT
 for args in "${arg_sets[@]}"; do
     for msg in "${msg_sets[@]}"; do
         # Make it easier to see which command is different.
-        echo "==========" $args $msg "==========">> "$before_file"
-        echo "==========" $args $msg "==========" >> "$after_file"
+        echo "==========" $args "$msg" "==========" >>"$before_file"
+        echo "==========" $args "$msg" "==========" >>"$after_file"
 
-        $before_cmd $msg $args >>"$before_file"
-        $after_cmd $msg $args >>"$after_file"
+        $before_cmd "$msg" $args >>"$before_file"
+        $after_cmd "$msg" $args >>"$after_file"
     done
     cat test/test.txt | $before_cmd $args >>"$before_file"
     cat test/test.txt | $after_cmd $args >>"$after_file"
 done
-cat test/test.txt | $before_cmd --summary 55 | sort | uniq --count >>"$before_file"
-cat test/test.txt | $after_cmd --summary 55 | sort | uniq --count >>"$after_file"
+cat test/test.txt | $before_cmd --summary "35 55" -v | sort | uniq --count >>"$before_file"
+cat test/test.txt | $after_cmd --summary "35 55" -v | sort | uniq --count >>"$after_file"
 
 $diff_tool "$before_file" "$after_file"
