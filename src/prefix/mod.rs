@@ -426,13 +426,15 @@ mod tests {
             repeating: false,
             strict: false,
             strip: false,
-            summary: Some(String::from("for 55")),
+            summary: Some(String::from("35 for 55")),
             tag: false,
-            value: false,
+            value: true,
         };
 
-        let regex_by_tag =
-            HashMap::<String, Regex>::from([(String::from("55"), Regex::new(r"\b55\b").unwrap())]);
+        let regex_by_tag = HashMap::<String, Regex>::from([
+            (String::from("35"), Regex::new(r"\b35\b").unwrap()),
+            (String::from("55"), Regex::new(r"\b55\b").unwrap()),
+        ]);
         let result = format_to_summary(&input, &regex_by_tag, &flags);
         let expected = String::from("NewOrderSingle for EUR/USD");
         assert_eq!(result, expected);
