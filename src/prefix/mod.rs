@@ -191,10 +191,19 @@ fn parse_fix_msg(input: &str, regex: &Regex) -> FixMsg {
     FixMsg::Full(result)
 }
 
+fn eq_ignore_ascii_case(a: &str, b: &str) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    a.bytes()
+        .zip(b.bytes())
+        .all(|(ac, bc)| ac.eq_ignore_ascii_case(&bc))
+}
+
 fn parse_tags(input: &str, regex: &Regex) -> String {
     if input.chars().all(|c| !c.is_ascii_digit()) {
         for (tag, tag_name) in tags::TAGS.iter().enumerate() {
-            if input.to_lowercase() == tag_name.to_lowercase() && !tag_name.is_empty() {
+            if eq_ignore_ascii_case(input, tag_name) && !tag_name.is_empty() {
                 return tag.to_string();
             }
         }
