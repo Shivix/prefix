@@ -30,8 +30,8 @@ _prefix() {
 '--strict[Only consider full FIX messages containing both BeginString and Checksum]' \
 '-s[Strip the whitespace around the = in each field]' \
 '--strip[Strip the whitespace around the = in each field]' \
-'-t[Translate tag numbers on non FIX message lines]' \
-'--tag[Translate tag numbers on non FIX message lines]' \
+'-t[Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it'\''s number]' \
+'--tag[Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it'\''s number]' \
 '-v[Translate the values of some tags (for Side\: 1 -> Buy)]' \
 '--value[Translate the values of some tags (for Side\: 1 -> Buy)]' \
 '-h[Print help]' \
