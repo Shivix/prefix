@@ -6,7 +6,7 @@ complete -c prefix -l porcelain -d 'print FIX messages closer to standard format
 complete -c prefix -s r -l repeating -d 'Combine any repeating groups into a single field with a comma delimited value'
 complete -c prefix -s f -l strict -d 'Only consider full FIX messages containing both BeginString and Checksum'
 complete -c prefix -s s -l strip -d 'Strip the whitespace around the = in each field'
-complete -c prefix -s t -l tag -d 'Translate tag numbers on non FIX message lines'
+complete -c prefix -s t -l tag -d 'Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it\'s number'
 complete -c prefix -s v -l value -d 'Translate the values of some tags (for Side: 1 -> Buy)'
 complete -c prefix -s h -l help -d 'Print help'
 complete -c prefix -s V -l version -d 'Print version'

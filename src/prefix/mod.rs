@@ -192,6 +192,13 @@ fn parse_fix_msg(input: &str, regex: &Regex) -> FixMsg {
 }
 
 fn parse_tags(input: &str, regex: &Regex) -> String {
+    if input.chars().all(|c| !c.is_ascii_digit()) {
+        for (tag, tag_name) in tags::TAGS.iter().enumerate() {
+            if input.to_lowercase() == tag_name.to_lowercase() && !tag_name.is_empty() {
+                return tag.to_string();
+            }
+        }
+    }
     let mut result = input.to_owned();
     for m in regex.find_iter(input) {
         let tag = m.as_str().parse::<usize>().unwrap();

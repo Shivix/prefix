@@ -1,6 +1,6 @@
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
-.TH prefix 1  "prefix 1.2.0" 
+.TH prefix 1  "prefix 1.2.1" 
 .SH NAME
 prefix \- A customizable pretty printer for FIX messages
 .SH SYNOPSIS
@@ -38,7 +38,7 @@ Strip the whitespace around the = in each field
 Summarise each fix message based on an optional template
 .TP
 \fB\-t\fR, \fB\-\-tag\fR
-Translate tag numbers on non FIX message lines
+Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it\*(Aqs number
 .TP
 \fB\-v\fR, \fB\-\-value\fR
 Translate the values of some tags (for Side: 1 \-> Buy)
@@ -52,4 +52,4 @@ Print version
 [\fImessage\fR]
 FIX message to be parsed, if not provided will look for a message piped through stdin
 .SH VERSION
-v1.2.0
+v1.2.1

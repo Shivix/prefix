@@ -42,7 +42,7 @@ pub fn make_command() -> Command {
                 .default_missing_value("")
         )
         .arg(
-            arg!(-t --tag "Translate tag numbers on non FIX message lines")
+            arg!(-t --tag "Translate tag numbers on non FIX message lines, if the entire line matches a tag name it will print it's number")
                 .action(ArgAction::SetTrue)
         )
         .arg(
