@@ -17,8 +17,8 @@ _prefix() {
     _arguments "${_arguments_options[@]}" : \
 '-c+[Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty]:when:(always auto never)' \
 '--color=[Adds colour to the delimiter and = in for FIX fields, auto will colour only when printing directly into a tty]:when:(always auto never)' \
-'-d+[Set delimiter string to print after each FIX field]:delimiter: ' \
-'--delimiter=[Set delimiter string to print after each FIX field]:delimiter: ' \
+'-d+[Set delimiter string to print after each FIX field]:delimiter:_default' \
+'--delimiter=[Set delimiter string to print after each FIX field]:delimiter:_default' \
 '-S+[Summarise each fix message based on an optional template]' \
 '--summary=[Summarise each fix message based on an optional template]' \
 '-o[Only print FIX messages]' \
@@ -38,7 +38,7 @@ _prefix() {
 '--help[Print help]' \
 '-V[Print version]' \
 '--version[Print version]' \
-'*::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:' \
+'*::message -- FIX message to be parsed, if not provided will look for a message piped through stdin:_default' \
 && ret=0
 }
 
