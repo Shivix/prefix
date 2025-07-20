@@ -43,20 +43,24 @@ ExecType             PartialFill
 Or summarising a log file that includes FIX messages.
 ```bash
 # Pipe the file contents to prefix which then summarises the FIX messages by instrument
-cat example.log | prefix --summary 55 --only-fix | sort | uniq --count
+cat example.log | prefix --summary "35 for 55" | sort | uniq --count
 ```
 outputs:
 ```
-4 NewOrderSingle EUR/USD
-4 ExecutionReport EUR/USD
-2 NewOrderSingle USD/KRW
-2 ExecutionReport USD/KRW
+4 NewOrderSingle for EUR/USD
+4 ExecutionReport for EUR/USD
+2 NewOrderSingle for USD/KRW
+2 ExecutionReport for USD/KRW
 ```
 
 ## Installation
 Can be installed using:
-```
+```bash
 cargo install prefix
+```
+Install manpage and completion using:
+```bash
+make install-<shell> # replace <shell> with the shell of your choice (fish/ zsh/ bash)
 ```
 ## Issues
 Any bugs/ requests can be added to the [issues](https://github.com/Shivix/prefix/issues) page on the github repository.
