@@ -2,7 +2,7 @@ complete -c prefix -s c -l color -d 'Adds colour to the delimiter and = in for F
 auto\t''
 never\t''"
 complete -c prefix -s d -l delimiter -d 'Set delimiter string to print after each FIX field' -r
-complete -c prefix -s S -l summary -d 'Summarise each fix message based on an optional template' -r
+complete -c prefix -s S -l summary -d 'Summarise each fix message based on a template, if summary is provided with no template then it uses \'35\'' -r
 complete -c prefix -s o -l only-fix -d 'Only print FIX messages'
 complete -c prefix -l porcelain -d 'print FIX messages closer to standard format, same as --delimiter \\x01 --strip'
 complete -c prefix -s r -l repeating -d 'Combine any repeating groups into a single field with a comma delimited value'

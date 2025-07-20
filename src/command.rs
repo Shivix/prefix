@@ -38,7 +38,7 @@ pub fn make_command() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            arg!(-S --summary [template] "Summarise each fix message based on an optional template")
+            arg!(-S --summary [template] "Summarise each fix message based on a template, if summary is provided with no template then it uses '35'")
                 .default_missing_value("35")
         )
         .arg(
